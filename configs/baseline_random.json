@@ -1,0 +1,31 @@
+{
+  "experiment_name": "baseline_random",
+  "grid": {
+    "nx": 64,
+    "ny": 64,
+    "lx": 6.283185307179586,
+    "ly": 6.283185307179586
+  },
+  "time": {
+    "dt": 0.002,
+    "steps": 200,
+    "save_every": 20,
+    "cfl_safety": 0.8,
+    "diffusion_safety": 0.5
+  },
+  "physics": {
+    "viscosity": 0.001
+  },
+  "initial_condition": {
+    "kind": "random",
+    "amplitude": 1.0,
+    "smoothing_sigma": 6.0,
+    "seed": 42
+  },
+  "output": {
+    "output_dir": "outputs/baseline_random",
+    "save_plots": true,
+    "save_snapshots": true,
+    "log_level": "INFO"
+  }
+}

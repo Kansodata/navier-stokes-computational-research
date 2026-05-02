@@ -1,0 +1,33 @@
+{
+  "experiment_name": "vortex_pair",
+  "grid": {
+    "nx": 96,
+    "ny": 96,
+    "lx": 6.283185307179586,
+    "ly": 6.283185307179586
+  },
+  "time": {
+    "dt": 0.001,
+    "steps": 300,
+    "save_every": 30,
+    "cfl_safety": 0.8,
+    "diffusion_safety": 0.5
+  },
+  "physics": {
+    "viscosity": 0.0008
+  },
+  "initial_condition": {
+    "kind": "vortices",
+    "amplitude": 1.0,
+    "vortex_radius": 0.35,
+    "vortex_strength": 10.0,
+    "vortex_distance": 1.2,
+    "seed": 42
+  },
+  "output": {
+    "output_dir": "outputs/vortex_pair",
+    "save_plots": true,
+    "save_snapshots": true,
+    "log_level": "INFO"
+  }
+}
