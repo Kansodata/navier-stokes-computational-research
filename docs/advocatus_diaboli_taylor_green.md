@@ -1,68 +1,76 @@
-# Advocatus Diaboli: Auditoria Inicial de Taylor-Green 2D
+# Advocatus Diaboli: Auditoría Inicial de Taylor-Green 2D
 
-## Proposito
+## 1. Propósito de la revisión
 
-Este documento define una revision critica inicial para la validacion Taylor-Green 2D. El rol de Advocatus Diaboli es cuestionar resultados y supuestos, no confirmarlos automaticamente.
+Esta revisión adopta el rol de *Advocatus Diaboli*: cuestionar resultados y supuestos, no validarlos automáticamente.
 
-Taylor-Green 2D es un benchmark controlado. No constituye evidencia de resolucion del problema 3D de Navier-Stokes ni demostracion matematica.
+El objetivo es reducir riesgo de sobreinterpretación en la validación Taylor-Green 2D recientemente incorporada.
 
-## Lectura de estados en el JSON
+Taylor-Green 2D es un benchmark controlado para verificación numérica localizada. No constituye evidencia de resolución del problema 3D de Navier-Stokes ni una demostración matemática.
 
-- `execution_status`: indica si la corrida y el pipeline de validacion terminaron correctamente con metricas finitas.
-- `accuracy_status`: indica el nivel de evaluacion de precision numerica.
-- `status`: campo legacy, conservado por compatibilidad, alineado con `execution_status`.
+## 2. Riesgos de falso positivo
 
-Interpretacion prudente:
+- Métricas finitas no implican precisión suficiente.
+- `status=passed` puede reflejar ejecución técnicamente completada, no exactitud científica aceptable.
+- Puede haber error relevante por resolución espacial insuficiente.
+- Puede haber error relevante por paso temporal (`dt`) inadecuado.
+- Puede haber sesgo por suposición de frontera periódica fuera de contexto.
+- Puede haber error de discretización aunque no aparezcan NaN/Inf.
+- Puede haber desalineación entre solución analítica y representación discreta en grilla/tiempo.
 
-- `execution_status=passed` no implica aceptacion cientifica fuerte.
-- `accuracy_status=warning` o `not_evaluated` exige revision humana antes de conclusiones.
+## 3. Preguntas críticas obligatorias
 
-## Riesgos de falso positivo
+1. ¿Qué significa exactamente `passed` en el JSON actual?
+2. ¿Existe tolerancia numérica explícita para aceptar/rechazar precisión?
+3. ¿Los errores `L2` y `L∞` son aceptables para la resolución usada?
+4. ¿Se comparó la solución exacta en `t=0` y en `t>0` con criterios cuantitativos explícitos?
+5. ¿La energía decae de forma consistente con la tendencia analítica esperada?
+6. ¿La validación distingue entre “ejecución exitosa” y “precisión aceptable”?
 
-- Metricas finitas no implican precision suficiente.
-- `status=passed` puede significar ejecucion correcta, no exactitud cientifica.
-- Error por resolucion insuficiente.
-- Error por paso temporal no refinado.
-- Error por condiciones de frontera fuera del dominio de interes.
-- Error por discretizacion aun con series finitas.
-- Error por comparacion analitica en grilla/tiempo no equivalentes.
-- Error por ausencia de tolerancias explicitas.
+## 4. Semántica de estados en el reporte
 
-## Preguntas criticas
+Para reducir ambigüedad operacional y científica, el reporte diferencia:
 
-1. Que significa exactamente `passed` en este contexto?
-2. Existen tolerancias numericas explicitas?
-3. Los errores `L2` y `L∞` son aceptables para esta resolucion?
-4. Se compara contra solucion exacta en `t=0` y `t>0`?
-5. La energia decae de forma consistente con la tendencia analitica?
-6. Se distingue ejecucion exitosa de precision aceptable?
-7. El resultado es reproducible con igual configuracion?
-8. El error mejora al aumentar resolucion?
+- `execution_status`: resultado de integridad de ejecución y generación del reporte.
+- `accuracy_status`: evaluación de precisión numérica frente a tolerancias explícitas (o estado de advertencia/no evaluación si no existen).
+- `warnings`: señales auditables de límites de interpretación y riesgos de sobrelectura.
+- `status`: campo legacy mantenido por compatibilidad y alineado al estado de ejecución.
 
-## Recomendaciones siguientes
+Interpretación prudente:
 
-- Mantener separacion `execution_status` vs `accuracy_status`.
-- Incorporar tolerancias configurables y trazables.
-- Evaluar varias resoluciones con mismo horizonte fisico.
-- Agregar chequeo explicito de decaimiento de energia.
-- Reportar resolucion, `dt`, pasos y norma inicial/final.
-- Mantener lista de `warnings` como salida obligatoria.
-- Mantener disclaimer: este flujo no prueba existencia/suavidad 3D.
+- `execution_status=passed` no implica, por sí solo, aceptación científica fuerte.
+- `accuracy_status=warning` o `not_evaluated` requiere revisión humana adicional.
 
-## Criterios minimos de aceptacion cientifica
+## 5. Recomendaciones para la siguiente iteración
 
-- Metricas finitas.
-- Tolerancias explicitas.
-- Configuracion completa persistida en JSON.
+- Separar `execution_status` de `accuracy_status`.
+- Agregar tolerancias configurables para `L2`, `L∞` y error relativo.
+- Agregar comparación en múltiples resoluciones para evaluar robustez.
+- Agregar validación explícita de decaimiento de energía.
+- Reportar siempre resolución, `dt`, número de pasos y norma inicial/final.
+- Mantener el disclaimer: este flujo no prueba existencia/suavidad global 3D.
+
+## 6. Criterios mínimos para aceptar científicamente una corrida Taylor-Green
+
+- Métricas finitas.
+- Tolerancias explícitas y justificadas.
 - Reproducibilidad verificable.
-- Comparacion contra baseline.
-- Mejora esperada bajo refinamiento.
-- Revision humana previa a conclusiones cientificas.
+- Configuración completa persistida en JSON.
+- Comparación contra baseline definido.
+- Revisión humana previa a conclusiones científicas.
 
-## Limites explicitos
+## 7. Límites explícitos
 
-- No es prueba matematica.
-- No es validacion 3D.
+- No es prueba matemática.
+- No es validación 3D.
 - No descarta singularidades.
 - No demuestra suavidad global.
-- No reemplaza analisis teorico ni revision cientifica externa.
+- No reemplaza análisis teórico ni revisión científica externa.
+
+## Evidencia usada en esta revisión
+
+- Código de validación: `src/navier_stokes_research/taylor_green.py`.
+- Pruebas existentes: `tests/test_taylor_green_validation.py`.
+- Artefacto observado: `outputs/benchmarks/taylor_green_2d/taylor_green_validation.json`.
+
+Observación puntual: el estado `passed` actual se decide por finitud de métricas, no por umbral explícito de precisión. Este comportamiento puede ser útil para hardening operativo, pero no basta para aceptación científica.
