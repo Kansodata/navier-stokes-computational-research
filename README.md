@@ -1,30 +1,28 @@
 # 2D Incompressible Navier-Stokes Research Repository
 
-Production-oriented research scaffold for deterministic 2D incompressible Navier-Stokes simulations in Python. The implementation uses a pseudo-spectral vorticity-streamfunction formulation on a periodic domain, with explicit stability guards, reproducible experiments, metrics capture, plots, tests, and a CLI runner.
+## Scientific disclaimer
 
-## Assumptions
+This repository is a computational research baseline for deterministic 2D incompressible Navier-Stokes simulations on periodic domains. It does not solve the 3D Navier-Stokes Millennium problem and does not provide theorem-level mathematical claims.
 
-- The solver targets 2D, incompressible, periodic domains.
-- Spatial derivatives are evaluated spectrally with FFTs.
-- Time integration uses a second-order explicit Heun scheme.
-- Stability is enforced conservatively through both advection CFL and diffusion checks.
-- The pressure field is eliminated through the streamfunction-vorticity formulation.
-- Random initial conditions are deterministic under fixed seeds.
+## Problem context
 
-## Repository Layout
+The implementation uses a pseudo-spectral vorticity-streamfunction method with explicit time stepping to support controlled numerical experiments, software validation, and reproducible benchmarking.
 
-- `src/navier_stokes_research/solver/`: pseudo-spectral solver and numerical utilities.
-- `src/navier_stokes_research/initial_conditions/`: random and vortex-pair initial states.
-- `src/navier_stokes_research/metrics/`: energy, enstrophy, and max-velocity diagnostics.
-- `src/navier_stokes_research/visualization/`: heatmaps and metric evolution plots.
-- `src/navier_stokes_research/runner.py`: simulation orchestration and artifact writing.
-- `src/navier_stokes_research/cli.py`: command-line entrypoint.
-- `configs/`: reproducible experiment configurations.
-- `experiments/`: example runner scripts.
-- `tests/`: core numerical tests.
-- `notebooks/`: analysis notebook.
+## What this repository does
 
-## Setup
+- Runs deterministic 2D incompressible periodic-domain simulations.
+- Computes diagnostic metrics: kinetic energy, enstrophy, max velocity, CFL.
+- Applies hardening checks (CFL, diffusion, NaN/Inf fail-fast).
+- Produces machine-readable validation JSON.
+- Provides a reproducible benchmark command and artifact set.
+
+## What this repository does not do
+
+- It does not claim physical truth for general turbulence regimes.
+- It does not establish convergence proofs or theoretical guarantees.
+- It does not cover non-periodic boundaries in this baseline.
+
+## Installation
 
 ```bash
 python -m venv .venv
@@ -33,47 +31,89 @@ python -m pip install --upgrade pip
 python -m pip install -e .[dev]
 ```
 
-## Run a Simulation
-
-```bash
-nsim --config configs/baseline_random.json
-```
-
-Override selected parameters:
-
-```bash
-nsim --config configs/baseline_random.json --steps 100 --dt 0.0015 --output-dir outputs/quick_run
-```
-
-Artifacts are written under the configured `output_dir`:
-
-- `metrics.csv`
-- `resolved_config.json`
-- `plots/metric_evolution.png`
-- `plots/vorticity_*.png`
-- `snapshots/vorticity_*.npy`
-
-## Example Experiment
-
-```bash
-python experiments/run_baseline.py
-```
-
-## Validation
+## Run tests
 
 ```bash
 pytest
-python -m navier_stokes_research.cli --config configs/baseline_random.json --steps 20 --output-dir outputs/smoke_test
 ```
 
-## Hardening Features
+## Run baseline simulation
 
-- Fails fast on CFL condition violations.
-- Fails fast when the diffusion stability threshold is exceeded.
-- Raises `FloatingPointError` on NaN/Inf detection.
-- Reproducible seeded initial conditions.
-- Persists the resolved runtime configuration for auditability.
+```bash
+python -m navier_stokes_research.cli --config configs/baseline_random.json
+```
 
-## Notes
+With explicit validation report:
 
-This project is intentionally scoped to a clean periodic-domain research baseline. Extensions such as forcing, boundaries other than periodic, adaptive stepping, and higher-order integrators should be added as separate, isolated changes rather than folded into this baseline.
+```bash
+python -m navier_stokes_research.cli --config configs/baseline_random.json --validate
+```
+
+Output location can be overridden:
+
+```bash
+python -m navier_stokes_research.cli --config configs/baseline_random.json --steps 100 --dt 0.0015 --output-dir outputs/quick_run
+```
+
+## Run reproducible benchmark
+
+```bash
+python -m navier_stokes_research.cli --benchmark
+```
+
+Optional benchmark output root:
+
+```bash
+python -m navier_stokes_research.cli --benchmark --benchmark-output-dir outputs/benchmarks
+```
+
+## How to interpret metrics
+
+- `energy`: discrete kinetic energy proxy over grid cells.
+- `enstrophy`: discrete vorticity-square proxy over grid cells.
+- `max_velocity`: maximum speed magnitude over the grid.
+- `cfl`: CFL number computed from max speed, timestep, and grid spacing.
+
+Validation report (`validation_report.json`) includes trend ratios and stability margins:
+
+- `kinetic_energy_trend.ratio`
+- `enstrophy_trend.ratio`
+- `cfl_margin.margin_min`
+- `diffusion_margin.margin`
+
+`status=pass` indicates all configured checks passed for the recorded run.
+
+## Reproducibility guarantees
+
+- Seed-controlled random initial condition generation.
+- Fixed benchmark parameters in code.
+- Persisted `resolved_config.json` per run.
+- Deterministic benchmark artifact path under `outputs/benchmarks/`.
+
+## Repository layout
+
+- `src/navier_stokes_research/solver/`: pseudo-spectral solver and numerical utilities.
+- `src/navier_stokes_research/initial_conditions/`: random and vortex initial states.
+- `src/navier_stokes_research/metrics/`: core diagnostics.
+- `src/navier_stokes_research/validation/`: validation checks and JSON reporting.
+- `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
+- `src/navier_stokes_research/runner.py`: simulation orchestration.
+- `src/navier_stokes_research/cli.py`: terminal entrypoint.
+- `tests/`: deterministic unit tests for numerics, validation, and benchmark.
+- `docs/`: research notes and validation protocol.
+
+## Current limitations
+
+- 2D periodic domain only.
+- Single explicit time integration scheme.
+- No forcing model in baseline.
+- Validation layer is practical quality control, not formal verification.
+
+## Future research roadmap
+
+1. Resolution/time-step convergence study harness.
+2. Controlled forcing scenarios with documented parameter sweeps.
+3. Extended diagnostics and uncertainty quantification.
+4. Optional alternative discretizations behind stable interfaces.
+
+See [docs/research_notes.md](docs/research_notes.md) and [docs/validation_protocol.md](docs/validation_protocol.md).

@@ -11,6 +11,11 @@ from navier_stokes_research.config import SimulationConfig
 from navier_stokes_research.initial_conditions import create_initial_vorticity
 from navier_stokes_research.metrics import summarize_state
 from navier_stokes_research.solver import NavierStokesSpectralSolver
+from navier_stokes_research.validation import (
+    evaluate_validation,
+    summarize_validation_for_log,
+    write_validation_report,
+)
 from navier_stokes_research.visualization import save_heatmap, save_metric_evolution
 
 LOGGER = logging.getLogger(__name__)
@@ -26,7 +31,7 @@ def _write_metrics_csv(metrics: list[dict[str, float]], path: Path) -> None:
         writer.writerows(metrics)
 
 
-def run_simulation(config: SimulationConfig) -> dict[str, Path]:
+def run_simulation(config: SimulationConfig, validate: bool = False) -> dict[str, object]:
     output_dir = Path(config.output.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     snapshots_dir = output_dir / "snapshots"
@@ -96,10 +101,20 @@ def run_simulation(config: SimulationConfig) -> dict[str, Path]:
     if config.output.save_plots:
         save_metric_evolution(metrics, plots_dir / "metric_evolution.png")
 
-    LOGGER.info("Completed experiment '%s'", config.experiment_name)
-    return {
+    result: dict[str, object] = {
         "output_dir": output_dir,
         "metrics_csv": metrics_path,
         "plots_dir": plots_dir,
         "snapshots_dir": snapshots_dir,
+        "metrics": metrics,
     }
+    if validate:
+        report = evaluate_validation(metrics, config)
+        report_path = output_dir / "validation_report.json"
+        write_validation_report(report_path, report)
+        LOGGER.info(summarize_validation_for_log(report))
+        result["validation_report"] = report
+        result["validation_report_path"] = report_path
+
+    LOGGER.info("Completed experiment '%s'", config.experiment_name)
+    return result
