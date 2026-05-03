@@ -15,7 +15,8 @@ keywords:
   - reproducibility
   - Taylor-Green vortex
   - Python
-license: "NOASSERTION"
+license: "MIT"
 repository-code: "https://github.com/Kansodata/navier-stokes-computational-research"
 version: "0.1.0"
 date-released: "2026-04-01"
+
