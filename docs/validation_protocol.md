@@ -41,7 +41,11 @@ Report content includes:
 - viscosity and final physical time,
 - `L2` and `L∞` errors,
 - relative error when the reference norm is safely non-zero,
-- final status (`passed`/`failed`) and technical notes.
+- backward-compatible `status` (`passed`/`failed`),
+- `execution_status` (`passed`/`failed`) for runtime integrity,
+- `accuracy_status` (`passed`/`failed`/`warning`/`not_evaluated`) for precision interpretation,
+- `warnings` list for explicit audit signals,
+- and technical notes.
 
 For critical review of interpretation limits and false-positive risks, see:
 

@@ -27,7 +27,21 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 5. ¿La energía decae de forma consistente con la tendencia analítica esperada?
 6. ¿La validación distingue entre “ejecución exitosa” y “precisión aceptable”?
 
-## 4. Recomendaciones para la siguiente iteración
+## 4. Semántica de estados en el reporte
+
+Para reducir ambigüedad operacional y científica, el reporte diferencia:
+
+- `execution_status`: resultado de integridad de ejecución y generación del reporte.
+- `accuracy_status`: evaluación de precisión numérica frente a tolerancias explícitas (o estado de advertencia/no evaluación si no existen).
+- `warnings`: señales auditables de límites de interpretación y riesgos de sobrelectura.
+- `status`: campo legacy mantenido por compatibilidad y alineado al estado de ejecución.
+
+Interpretación prudente:
+
+- `execution_status=passed` no implica, por sí solo, aceptación científica fuerte.
+- `accuracy_status=warning` o `not_evaluated` requiere revisión humana adicional.
+
+## 5. Recomendaciones para la siguiente iteración
 
 - Separar `execution_status` de `accuracy_status`.
 - Agregar tolerancias configurables para `L2`, `L∞` y error relativo.
@@ -36,7 +50,7 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - Reportar siempre resolución, `dt`, número de pasos y norma inicial/final.
 - Mantener el disclaimer: este flujo no prueba existencia/suavidad global 3D.
 
-## 5. Criterios mínimos para aceptar científicamente una corrida Taylor-Green
+## 6. Criterios mínimos para aceptar científicamente una corrida Taylor-Green
 
 - Métricas finitas.
 - Tolerancias explícitas y justificadas.
@@ -45,7 +59,7 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - Comparación contra baseline definido.
 - Revisión humana previa a conclusiones científicas.
 
-## 6. Límites explícitos
+## 7. Límites explícitos
 
 - No es prueba matemática.
 - No es validación 3D.

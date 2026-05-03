@@ -111,7 +111,7 @@ This command writes:
 
 - `outputs/benchmarks/taylor_green_2d/taylor_green_validation.json`
 
-The report includes resolved configuration, domain, resolution, viscosity, final physical time, and finite error metrics (`L2`, `L∞`, and relative error when numerically meaningful).
+The report includes resolved configuration, domain, resolution, viscosity, final physical time, finite error metrics (`L2`, `L∞`, and relative error when numerically meaningful), and explicit status separation (`execution_status` vs `accuracy_status`) with `warnings`.
 
 ## Local static visual reports
 
