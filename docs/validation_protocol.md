@@ -43,6 +43,10 @@ Report content includes:
 - relative error when the reference norm is safely non-zero,
 - final status (`passed`/`failed`) and technical notes.
 
+For critical review of interpretation limits and false-positive risks, see:
+
+- `docs/advocatus_diaboli_taylor_green.md`
+
 ## Numerical stability checks
 
 The solver enforces:
