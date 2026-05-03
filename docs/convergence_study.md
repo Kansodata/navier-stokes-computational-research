@@ -38,6 +38,7 @@ For consecutive resolutions:
 - `convergence_summary.json` is created.
 - `convergence_metrics.csv` is created.
 - At least one comparative PNG plot is created.
+- `report.html` is created for local static review.
 - Every run includes validation status.
 - No NaN/Inf is silently accepted.
 
@@ -46,6 +47,7 @@ For consecutive resolutions:
 - Output path is configurable and grouped under a single study directory.
 - Failures in individual runs raise clear exceptions and stop the harness.
 - Relative differences use `max(abs(reference), 1e-12)` to avoid division-by-zero instability.
+- Static HTML report generation must not require network access.
 
 ## Next steps for more rigorous studies
 

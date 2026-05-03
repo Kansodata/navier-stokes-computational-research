@@ -68,6 +68,10 @@ Optional benchmark output root:
 python -m navier_stokes_research.cli --benchmark --benchmark-output-dir outputs/benchmarks
 ```
 
+The benchmark run also generates a local static report:
+
+- `outputs/benchmarks/baseline_2d_incompressible/report.html`
+
 ## Run convergence study
 
 ```bash
@@ -85,6 +89,16 @@ Default study artifacts are written under:
 - `outputs/convergence/baseline_resolution_study/convergence_summary.json`
 - `outputs/convergence/baseline_resolution_study/convergence_metrics.csv`
 - `outputs/convergence/baseline_resolution_study/convergence_comparison.png`
+- `outputs/convergence/baseline_resolution_study/report.html`
+
+## Local static visual reports
+
+Reports are local static HTML files with embedded CSS and no external dependencies. Open them directly from the filesystem:
+
+- `outputs/benchmarks/baseline_2d_incompressible/report.html`
+- `outputs/convergence/baseline_resolution_study/report.html`
+
+They are intended for reproducible visual inspection, not formal scientific proof.
 
 ## How to interpret metrics
 
@@ -144,4 +158,4 @@ For convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), and [docs/convergence_study.md](docs/convergence_study.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), and [docs/reports.md](docs/reports.md).

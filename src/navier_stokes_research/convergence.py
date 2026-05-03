@@ -20,6 +20,7 @@ from navier_stokes_research.config import (
     SimulationConfig,
     TimeConfig,
 )
+from navier_stokes_research.reporting import generate_convergence_report
 from navier_stokes_research.runner import run_simulation
 
 
@@ -211,9 +212,12 @@ def run_convergence_study(
                 "validation_status": validation_report["status"],
                 "validation_warnings": validation_report["warnings"],
                 "artifacts": {
-                    key: str(value)
-                    for key, value in run_result.items()
-                    if key.endswith("_path") or key.endswith("_dir")
+                    **{
+                        key: str(value)
+                        for key, value in run_result.items()
+                        if key.endswith("_path") or key.endswith("_dir")
+                    },
+                    "metrics_csv": str(run_result["metrics_csv"]),
                 },
             }
         )
@@ -259,11 +263,12 @@ def run_convergence_study(
     }
     summary_path = study_dir / "convergence_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    report_path = generate_convergence_report(study_dir)
 
     return {
         "study_dir": study_dir,
         "convergence_summary_path": summary_path,
         "convergence_metrics_csv_path": csv_path,
         "comparison_plot_path": plot_path,
+        "convergence_report_path": report_path,
     }
-

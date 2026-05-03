@@ -12,6 +12,7 @@ from navier_stokes_research.config import (
     SimulationConfig,
     TimeConfig,
 )
+from navier_stokes_research.reporting import generate_benchmark_report
 from navier_stokes_research.runner import run_simulation
 
 
@@ -65,4 +66,5 @@ def run_benchmark(base_output_dir: str = "outputs/benchmarks") -> dict[str, Path
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     run_result["benchmark_summary_path"] = summary_path
+    run_result["benchmark_report_path"] = generate_benchmark_report(config.output.output_dir)
     return run_result
