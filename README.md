@@ -15,6 +15,7 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - Applies hardening checks (CFL, diffusion, NaN/Inf fail-fast).
 - Produces machine-readable validation JSON.
 - Provides a reproducible benchmark command and artifact set.
+- Provides a reproducible convergence study harness.
 
 ## What this repository does not do
 
@@ -67,6 +68,24 @@ Optional benchmark output root:
 python -m navier_stokes_research.cli --benchmark --benchmark-output-dir outputs/benchmarks
 ```
 
+## Run convergence study
+
+```bash
+python -m navier_stokes_research.cli --convergence-study
+```
+
+Optional output root:
+
+```bash
+python -m navier_stokes_research.cli --convergence-study --convergence-output-dir outputs/convergence
+```
+
+Default study artifacts are written under:
+
+- `outputs/convergence/baseline_resolution_study/convergence_summary.json`
+- `outputs/convergence/baseline_resolution_study/convergence_metrics.csv`
+- `outputs/convergence/baseline_resolution_study/convergence_comparison.png`
+
 ## How to interpret metrics
 
 - `energy`: discrete kinetic energy proxy over grid cells.
@@ -83,10 +102,17 @@ Validation report (`validation_report.json`) includes trend ratios and stability
 
 `status=pass` indicates all configured checks passed for the recorded run.
 
+For convergence outputs:
+
+- `relative_differences_consecutive` reports relative deltas of final metrics between adjacent resolutions.
+- Lower relative differences are a consistency signal across refinements.
+- This does not prove formal numerical convergence by itself.
+
 ## Reproducibility guarantees
 
 - Seed-controlled random initial condition generation.
 - Fixed benchmark parameters in code.
+- Fixed convergence-study default parameters in code (`32x32`, `64x64`) and fixed seed.
 - Persisted `resolved_config.json` per run.
 - Deterministic benchmark artifact path under `outputs/benchmarks/`.
 
@@ -97,6 +123,7 @@ Validation report (`validation_report.json`) includes trend ratios and stability
 - `src/navier_stokes_research/metrics/`: core diagnostics.
 - `src/navier_stokes_research/validation/`: validation checks and JSON reporting.
 - `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
+- `src/navier_stokes_research/convergence.py`: reproducible convergence-study harness.
 - `src/navier_stokes_research/runner.py`: simulation orchestration.
 - `src/navier_stokes_research/cli.py`: terminal entrypoint.
 - `tests/`: deterministic unit tests for numerics, validation, and benchmark.
@@ -108,12 +135,13 @@ Validation report (`validation_report.json`) includes trend ratios and stability
 - Single explicit time integration scheme.
 - No forcing model in baseline.
 - Validation layer is practical quality control, not formal verification.
+- Convergence harness is a baseline consistency study, not a formal convergence proof.
 
 ## Future research roadmap
 
-1. Resolution/time-step convergence study harness.
+1. Extend convergence study with more refinement levels and independent time refinement.
 2. Controlled forcing scenarios with documented parameter sweeps.
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md) and [docs/validation_protocol.md](docs/validation_protocol.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), and [docs/convergence_study.md](docs/convergence_study.md).

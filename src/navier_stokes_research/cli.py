@@ -5,6 +5,7 @@ from dataclasses import replace
 
 from navier_stokes_research.benchmark import run_benchmark
 from navier_stokes_research.config import load_config
+from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.runner import run_simulation
 
@@ -46,6 +47,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="outputs/benchmarks",
         help="Base directory for benchmark artifacts.",
     )
+    parser.add_argument(
+        "--convergence-study",
+        action="store_true",
+        help="Run the reproducible convergence study harness.",
+    )
+    parser.add_argument(
+        "--convergence-output-dir",
+        default="outputs/convergence",
+        help="Base directory for convergence-study artifacts.",
+    )
     return parser
 
 
@@ -56,8 +67,15 @@ def main() -> None:
         run_benchmark(base_output_dir=args.benchmark_output_dir)
         return
 
+    if args.convergence_study:
+        configure_logging("INFO")
+        run_convergence_study(base_output_dir=args.convergence_output_dir)
+        return
+
     if not args.config:
-        raise ValueError("--config is required unless --benchmark is used.")
+        raise ValueError(
+            "--config is required unless --benchmark or --convergence-study is used."
+        )
 
     config = load_config(args.config)
 

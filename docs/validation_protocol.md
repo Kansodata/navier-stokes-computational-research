@@ -47,3 +47,23 @@ For baseline acceptance:
 - benchmark run completes,
 - validation status is generated with machine-readable report,
 - and artifacts are reproducible for fixed benchmark parameters within numeric tolerances.
+
+## Convergence study protocol
+
+The convergence harness runs a fixed seeded scenario over multiple resolutions and writes:
+
+- `convergence_summary.json`
+- `convergence_metrics.csv`
+- `convergence_comparison.png`
+
+Protocol constraints:
+
+- same viscosity and seed across runs,
+- target physical horizon approximated with resolution-scaled `dt`,
+- post-run validation required for each resolution,
+- relative differences computed between consecutive resolutions.
+
+Interpretation limits:
+
+- these comparisons provide reproducibility and consistency signals,
+- they do not constitute formal convergence proof or mathematical guarantees.
