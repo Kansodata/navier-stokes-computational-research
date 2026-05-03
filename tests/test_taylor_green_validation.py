@@ -44,6 +44,10 @@ def test_taylor_green_validation_writes_expected_json(tmp_path: Path) -> None:
 
     payload = json.loads(report_path.read_text(encoding="utf-8"))
     assert payload["status"] in {"passed", "failed"}
+    assert payload["execution_status"] in {"passed", "failed"}
+    assert payload["accuracy_status"] in {"passed", "failed", "warning", "not_evaluated"}
+    assert isinstance(payload["warnings"], list)
+    assert payload["status"] == payload["execution_status"]
     assert "errors" in payload
     assert "l2" in payload["errors"]
     assert "linf" in payload["errors"]

@@ -93,6 +93,32 @@ def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     temp_path.replace(path)
 
 
+def _evaluate_accuracy_status(
+    errors: dict[str, float | None],
+    tolerances: dict[str, float] | None = None,
+) -> tuple[str, list[str]]:
+    warnings: list[str] = []
+    if not tolerances:
+        warnings.append("no_explicit_accuracy_tolerances_configured")
+        return "warning", warnings
+
+    checks: list[bool] = []
+    for key in ("l2", "linf", "relative"):
+        if key not in tolerances:
+            continue
+        value = errors.get(key)
+        limit = tolerances[key]
+        if value is None or not np.isfinite(value):
+            checks.append(False)
+            continue
+        checks.append(bool(value <= limit))
+
+    if not checks:
+        warnings.append("tolerances_defined_but_no_matching_metrics")
+        return "not_evaluated", warnings
+    return ("passed", warnings) if all(checks) else ("failed", warnings)
+
+
 def build_taylor_green_config(
     base_output_dir: str = "outputs/benchmarks",
     resolution: int = 64,
@@ -150,7 +176,12 @@ def run_taylor_green_validation(base_output_dir: str = "outputs/benchmarks") -> 
     )
     if errors["relative"] is not None:
         finite_metrics = finite_metrics and bool(np.isfinite(errors["relative"]))
-    status = "passed" if finite_metrics else "failed"
+    execution_status = "passed" if finite_metrics else "failed"
+    accuracy_status, warnings = _evaluate_accuracy_status(errors=errors, tolerances=None)
+    if execution_status == "passed":
+        warnings.append("status_passed_reflects_runtime_execution_not_scientific_acceptance")
+    warnings.append("taylor_green_2d_controlled_case_not_a_3d_existence_smoothness_proof")
+    status = execution_status
 
     report: dict[str, Any] = {
         "resolved_configuration": asdict(config),
@@ -164,6 +195,9 @@ def run_taylor_green_validation(base_output_dir: str = "outputs/benchmarks") -> 
             "relative": errors["relative"],
         },
         "status": status,
+        "execution_status": execution_status,
+        "accuracy_status": accuracy_status,
+        "warnings": warnings,
         "notes": [
             "Validacion numerica controlada 2D con solucion analitica de Taylor-Green.",
             "Este resultado no prueba existencia/suavidad global del problema 3D de Navier-Stokes.",
