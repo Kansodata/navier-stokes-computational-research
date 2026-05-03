@@ -4,6 +4,8 @@
 
 Provide a reproducible, low-ambiguity baseline harness to compare final diagnostics across multiple grid resolutions for the same 2D incompressible periodic-domain scenario.
 
+This convergence harness complements (and does not replace) the controlled Taylor-Green 2D analytical validation.
+
 ## Assumptions
 
 - 2D periodic incompressible setting only.

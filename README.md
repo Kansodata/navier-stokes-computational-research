@@ -101,6 +101,18 @@ Default study artifacts are written under:
 - `outputs/convergence/baseline_resolution_study/report.html`
 - `outputs/convergence/baseline_resolution_study/convergence_quality.json`
 
+## Run Taylor-Green 2D validation
+
+```bash
+python -m navier_stokes_research.cli --taylor-green-validation
+```
+
+This command writes:
+
+- `outputs/benchmarks/taylor_green_2d/taylor_green_validation.json`
+
+The report includes resolved configuration, domain, resolution, viscosity, final physical time, and finite error metrics (`L2`, `L∞`, and relative error when numerically meaningful).
+
 ## Local static visual reports
 
 Reports are local static HTML files with embedded CSS and no external dependencies. They are generated in Spanish by default and can be opened directly from the filesystem:
@@ -168,6 +180,7 @@ For convergence outputs:
 - Validation layer is practical quality control, not formal verification.
 - Convergence harness is a baseline consistency study, not a formal convergence proof.
 - Quality thresholds are heuristic review aids, not mathematical criteria.
+- Taylor-Green validation is a controlled 2D case and does not prove global existence/smoothness for 3D Navier-Stokes.
 
 ## Future research roadmap
 

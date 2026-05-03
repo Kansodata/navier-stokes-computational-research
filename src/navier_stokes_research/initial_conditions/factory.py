@@ -69,4 +69,9 @@ def create_initial_vorticity(
             strength=config.vortex_strength,
             distance=config.vortex_distance,
         )
+    if config.kind == "taylor_green_2d":
+        x = np.linspace(0.0, grid.lx, grid.nx, endpoint=False)
+        y = np.linspace(0.0, grid.ly, grid.ny, endpoint=False)
+        xx, yy = np.meshgrid(x, y, indexing="ij")
+        return 2.0 * config.amplitude * np.sin(xx) * np.sin(yy)
     raise ValueError(f"Unsupported initial condition kind: {config.kind}")

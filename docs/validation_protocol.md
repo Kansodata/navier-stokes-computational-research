@@ -10,6 +10,7 @@ The current validation layer checks:
 - NaN/Inf detection in emitted metrics,
 - CFL margin against configured limit,
 - diffusion stability margin against configured limit.
+- finite error comparison against the analytical 2D Taylor-Green vortex for the controlled canonical setup.
 
 It also supports an incompressibility residual field in the report when available.
 
@@ -21,6 +22,26 @@ This protocol does not establish:
 - convergence-order guarantees,
 - boundary-condition generality beyond periodic domains,
 - or any theorem-level result.
+- The Taylor-Green check is only a controlled 2D validation target and does not establish global 3D existence/smoothness.
+
+## Taylor-Green 2D controlled validation
+
+The command:
+
+- `python -m navier_stokes_research.cli --taylor-green-validation`
+
+runs a periodic-domain test on `[0, 2π] x [0, 2π]` and writes:
+
+- `outputs/benchmarks/taylor_green_2d/taylor_green_validation.json`
+
+Report content includes:
+
+- resolved configuration,
+- domain and resolution,
+- viscosity and final physical time,
+- `L2` and `L∞` errors,
+- relative error when the reference norm is safely non-zero,
+- final status (`passed`/`failed`) and technical notes.
 
 ## Numerical stability checks
 

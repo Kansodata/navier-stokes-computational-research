@@ -8,6 +8,7 @@ from navier_stokes_research.config import load_config
 from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.taylor_green import run_taylor_green_validation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,6 +63,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Include the optional 128x128 resolution in the convergence study.",
     )
+    parser.add_argument(
+        "--taylor-green-validation",
+        action="store_true",
+        help="Run controlled 2D Taylor-Green validation and write taylor_green_validation.json.",
+    )
     return parser
 
 
@@ -78,6 +84,11 @@ def main() -> None:
             base_output_dir=args.convergence_output_dir,
             extended=args.convergence_extended,
         )
+        return
+
+    if args.taylor_green_validation:
+        configure_logging("INFO")
+        run_taylor_green_validation(base_output_dir=args.benchmark_output_dir)
         return
 
     if not args.config:
