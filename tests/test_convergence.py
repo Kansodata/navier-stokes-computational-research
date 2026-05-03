@@ -6,7 +6,11 @@ from pathlib import Path
 import pytest
 
 from navier_stokes_research.cli import build_parser
-from navier_stokes_research.convergence import _relative_difference, run_convergence_study
+from navier_stokes_research.convergence import (
+    EXTENDED_RESOLUTIONS,
+    _relative_difference,
+    run_convergence_study,
+)
 
 
 def test_relative_difference_computation() -> None:
@@ -37,8 +41,10 @@ def test_convergence_study_generates_summary_and_artifacts(tmp_path: Path) -> No
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     assert summary["study_name"] == "test_study"
+    assert summary["inputs"]["initial_condition_kind"] == "vortices"
     assert "runs" in summary and len(summary["runs"]) == 2
     assert "relative_differences_consecutive" in summary
+    assert "quality_interpretation" in summary
     assert summary["runs"][0]["resolution"] == 16
     assert summary["runs"][1]["resolution"] == 24
     assert summary["runs"][0]["validation_status"] in {"pass", "warn"}
@@ -48,3 +54,10 @@ def test_cli_parser_supports_convergence_flag() -> None:
     parser = build_parser()
     args = parser.parse_args(["--convergence-study"])
     assert args.convergence_study is True
+
+
+def test_cli_parser_supports_convergence_extended_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--convergence-study", "--convergence-extended"])
+    assert args.convergence_extended is True
+    assert EXTENDED_RESOLUTIONS == (32, 64, 128)

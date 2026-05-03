@@ -30,11 +30,13 @@ def test_generate_benchmark_report_from_minimal_artifacts(tmp_path: Path) -> Non
         ),
     )
     _write(root / "validation_report.json", json.dumps({"checks": {"a": {"ok": True}}}))
+    _write(root / "benchmark_quality.json", json.dumps({"status": "aprobado", "reasons": [], "recommendation": "ok"}))
     _write(root / "metrics.csv", "step,time,energy,enstrophy,max_velocity,cfl\n0,0,1,1,1,0.1\n")
 
     report = generate_benchmark_report(root)
     content = report.read_text(encoding="utf-8")
-    assert "Benchmark Report" in content
+    assert "Reporte de benchmark" in content
+    assert "Diagnóstico automático" in content
     assert "&lt;tag&gt;" in content
 
 
@@ -69,11 +71,13 @@ def test_generate_convergence_report_from_minimal_artifacts(tmp_path: Path) -> N
             }
         ),
     )
+    _write(root / "convergence_quality.json", json.dumps({"status": "aprobado", "reasons": [], "recommendation": "ok"}))
     _write(root / "convergence_metrics.csv", "resolution,dt\n16,0.01\n")
 
     report = generate_convergence_report(root)
     content = report.read_text(encoding="utf-8")
-    assert "Convergence Study Report" in content
+    assert "Reporte de estudio de convergencia" in content
+    assert "Diagnóstico automático" in content
     assert "study&lt;1&gt;" in content
     assert "warn &lt;html&gt;" in content
 
@@ -81,6 +85,7 @@ def test_generate_convergence_report_from_minimal_artifacts(tmp_path: Path) -> N
 def test_report_html_exists_after_benchmark_and_convergence_runs(tmp_path: Path) -> None:
     bench_result = run_benchmark(base_output_dir=str(tmp_path / "benchmarks"))
     assert Path(bench_result["benchmark_report_path"]).exists()
+    assert Path(bench_result["benchmark_quality_path"]).exists()
 
     conv_result = run_convergence_study(
         base_output_dir=str(tmp_path / "convergence"),
@@ -94,3 +99,4 @@ def test_report_html_exists_after_benchmark_and_convergence_runs(tmp_path: Path)
         save_plots=False,
     )
     assert Path(conv_result["convergence_report_path"]).exists()
+    assert Path(conv_result["convergence_quality_path"]).exists()

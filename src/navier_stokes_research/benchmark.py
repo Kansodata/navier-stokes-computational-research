@@ -12,7 +12,11 @@ from navier_stokes_research.config import (
     SimulationConfig,
     TimeConfig,
 )
-from navier_stokes_research.reporting import generate_benchmark_report
+from navier_stokes_research.interpretation import (
+    interpret_benchmark_quality,
+    write_quality_report,
+)
+from navier_stokes_research.reporting import generate_benchmark_report, generate_reports_index
 from navier_stokes_research.runner import run_simulation
 
 
@@ -64,7 +68,19 @@ def run_benchmark(base_output_dir: str = "outputs/benchmarks") -> dict[str, Path
 
     summary_path = Path(config.output.output_dir) / "benchmark_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    quality = interpret_benchmark_quality(
+        summary=summary,
+        validation_report=validation_report,
+        output_dir=config.output.output_dir,
+    )
+    quality_path = Path(config.output.output_dir) / "benchmark_quality.json"
+    write_quality_report(quality_path, quality)
 
     run_result["benchmark_summary_path"] = summary_path
-    run_result["benchmark_report_path"] = generate_benchmark_report(config.output.output_dir)
+    run_result["benchmark_quality_path"] = quality_path
+    run_result["benchmark_report_path"] = generate_benchmark_report(
+        config.output.output_dir,
+        language="es",
+    )
+    run_result["reports_index_path"] = generate_reports_index()
     return run_result

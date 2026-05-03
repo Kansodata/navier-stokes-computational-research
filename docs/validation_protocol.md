@@ -59,6 +59,7 @@ The convergence harness runs a fixed seeded scenario over multiple resolutions a
 Protocol constraints:
 
 - same viscosity and seed across runs,
+- smooth deterministic vortex-pair initial condition across resolutions,
 - target physical horizon approximated with resolution-scaled `dt`,
 - post-run validation required for each resolution,
 - relative differences computed between consecutive resolutions.

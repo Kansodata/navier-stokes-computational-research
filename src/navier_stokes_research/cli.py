@@ -57,6 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="outputs/convergence",
         help="Base directory for convergence-study artifacts.",
     )
+    parser.add_argument(
+        "--convergence-extended",
+        action="store_true",
+        help="Include the optional 128x128 resolution in the convergence study.",
+    )
     return parser
 
 
@@ -69,7 +74,10 @@ def main() -> None:
 
     if args.convergence_study:
         configure_logging("INFO")
-        run_convergence_study(base_output_dir=args.convergence_output_dir)
+        run_convergence_study(
+            base_output_dir=args.convergence_output_dir,
+            extended=args.convergence_extended,
+        )
         return
 
     if not args.config:

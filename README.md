@@ -16,6 +16,8 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - Produces machine-readable validation JSON.
 - Provides a reproducible benchmark command and artifact set.
 - Provides a reproducible convergence study harness.
+- Produces local static HTML reports in Spanish by default.
+- Writes automatic quality interpretation JSON files for benchmark and convergence runs.
 
 ## What this repository does not do
 
@@ -71,11 +73,18 @@ python -m navier_stokes_research.cli --benchmark --benchmark-output-dir outputs/
 The benchmark run also generates a local static report:
 
 - `outputs/benchmarks/baseline_2d_incompressible/report.html`
+- `outputs/benchmarks/baseline_2d_incompressible/benchmark_quality.json`
 
 ## Run convergence study
 
 ```bash
 python -m navier_stokes_research.cli --convergence-study
+```
+
+Optional extended mode adds `128x128` to the default `32x32`, `64x64` study:
+
+```bash
+python -m navier_stokes_research.cli --convergence-study --convergence-extended
 ```
 
 Optional output root:
@@ -90,15 +99,20 @@ Default study artifacts are written under:
 - `outputs/convergence/baseline_resolution_study/convergence_metrics.csv`
 - `outputs/convergence/baseline_resolution_study/convergence_comparison.png`
 - `outputs/convergence/baseline_resolution_study/report.html`
+- `outputs/convergence/baseline_resolution_study/convergence_quality.json`
 
 ## Local static visual reports
 
-Reports are local static HTML files with embedded CSS and no external dependencies. Open them directly from the filesystem:
+Reports are local static HTML files with embedded CSS and no external dependencies. They are generated in Spanish by default and can be opened directly from the filesystem:
 
 - `outputs/benchmarks/baseline_2d_incompressible/report.html`
 - `outputs/convergence/baseline_resolution_study/report.html`
 
 They are intended for reproducible visual inspection, not formal scientific proof.
+
+The optional local index is written to:
+
+- `outputs/reports/index.html`
 
 ## How to interpret metrics
 
@@ -121,12 +135,14 @@ For convergence outputs:
 - `relative_differences_consecutive` reports relative deltas of final metrics between adjacent resolutions.
 - Lower relative differences are a consistency signal across refinements.
 - This does not prove formal numerical convergence by itself.
+- Automatic quality status uses heuristic thresholds documented in `docs/quality_interpretation.md`.
 
 ## Reproducibility guarantees
 
 - Seed-controlled random initial condition generation.
 - Fixed benchmark parameters in code.
 - Fixed convergence-study default parameters in code (`32x32`, `64x64`) and fixed seed.
+- Convergence study uses a smooth deterministic vortex-pair initial condition for better comparability across resolutions.
 - Persisted `resolved_config.json` per run.
 - Deterministic benchmark artifact path under `outputs/benchmarks/`.
 
@@ -138,6 +154,7 @@ For convergence outputs:
 - `src/navier_stokes_research/validation/`: validation checks and JSON reporting.
 - `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
 - `src/navier_stokes_research/convergence.py`: reproducible convergence-study harness.
+- `src/navier_stokes_research/interpretation.py`: heuristic quality interpretation.
 - `src/navier_stokes_research/runner.py`: simulation orchestration.
 - `src/navier_stokes_research/cli.py`: terminal entrypoint.
 - `tests/`: deterministic unit tests for numerics, validation, and benchmark.
@@ -150,6 +167,7 @@ For convergence outputs:
 - No forcing model in baseline.
 - Validation layer is practical quality control, not formal verification.
 - Convergence harness is a baseline consistency study, not a formal convergence proof.
+- Quality thresholds are heuristic review aids, not mathematical criteria.
 
 ## Future research roadmap
 
@@ -158,4 +176,4 @@ For convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), and [docs/reports.md](docs/reports.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), and [docs/quality_interpretation.md](docs/quality_interpretation.md).

@@ -20,11 +20,16 @@ from navier_stokes_research.config import (
     SimulationConfig,
     TimeConfig,
 )
-from navier_stokes_research.reporting import generate_convergence_report
+from navier_stokes_research.interpretation import (
+    interpret_convergence_quality,
+    write_quality_report,
+)
+from navier_stokes_research.reporting import generate_convergence_report, generate_reports_index
 from navier_stokes_research.runner import run_simulation
 
 
 DEFAULT_RESOLUTIONS = (32, 64)
+EXTENDED_RESOLUTIONS = (32, 64, 128)
 DEFAULT_BASE_RESOLUTION = 64
 DEFAULT_BASE_DT = 0.0015
 DEFAULT_FINAL_TIME = 0.24
@@ -59,10 +64,12 @@ def _build_convergence_config(
         ),
         physics=PhysicsConfig(viscosity=viscosity),
         initial_condition=InitialConditionConfig(
-            kind="random",
+            kind="vortices",
             amplitude=1.0,
-            smoothing_sigma=6.0,
             seed=seed,
+            vortex_radius=0.35,
+            vortex_strength=8.0,
+            vortex_distance=1.2,
         ),
         output=OutputConfig(
             output_dir=output_dir,
@@ -121,7 +128,8 @@ def run_convergence_study(
     *,
     base_output_dir: str = "outputs/convergence",
     study_name: str = "baseline_resolution_study",
-    resolutions: tuple[int, ...] = DEFAULT_RESOLUTIONS,
+    resolutions: tuple[int, ...] | None = None,
+    extended: bool = False,
     base_resolution: int = DEFAULT_BASE_RESOLUTION,
     base_dt: float = DEFAULT_BASE_DT,
     final_time: float = DEFAULT_FINAL_TIME,
@@ -129,11 +137,12 @@ def run_convergence_study(
     seed: int = DEFAULT_SEED,
     save_plots: bool = True,
 ) -> dict[str, Path]:
-    if len(resolutions) < 2:
+    selected_resolutions = resolutions or (EXTENDED_RESOLUTIONS if extended else DEFAULT_RESOLUTIONS)
+    if len(selected_resolutions) < 2:
         raise ValueError("At least two resolutions are required for convergence comparison.")
-    if any(value <= 0 for value in resolutions):
+    if any(value <= 0 for value in selected_resolutions):
         raise ValueError("All resolutions must be positive integers.")
-    sorted_resolutions = tuple(sorted(set(resolutions)))
+    sorted_resolutions = tuple(sorted(set(selected_resolutions)))
 
     study_dir = Path(base_output_dir) / study_name
     study_dir.mkdir(parents=True, exist_ok=True)
@@ -236,12 +245,14 @@ def run_convergence_study(
             "physical_horizon_rule": "steps = round(final_time / dt)",
         },
         "inputs": {
+            "extended": extended,
             "resolutions": list(sorted_resolutions),
             "base_resolution": base_resolution,
             "base_dt": base_dt,
             "target_final_time": final_time,
             "viscosity": viscosity,
             "seed": seed,
+            "initial_condition_kind": "vortices",
         },
         "runs": runs,
         "relative_differences_consecutive": [
@@ -263,12 +274,21 @@ def run_convergence_study(
     }
     summary_path = study_dir / "convergence_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    report_path = generate_convergence_report(study_dir)
+    quality = interpret_convergence_quality(summary=summary, output_dir=study_dir)
+    quality_path = study_dir / "convergence_quality.json"
+    write_quality_report(quality_path, quality)
+    summary["quality_interpretation"] = quality
+    summary["artifacts"]["convergence_quality_json"] = str(quality_path)
+    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    report_path = generate_convergence_report(study_dir, language="es")
+    reports_index_path = generate_reports_index()
 
     return {
         "study_dir": study_dir,
         "convergence_summary_path": summary_path,
         "convergence_metrics_csv_path": csv_path,
         "comparison_plot_path": plot_path,
+        "convergence_quality_path": quality_path,
         "convergence_report_path": report_path,
+        "reports_index_path": reports_index_path,
     }

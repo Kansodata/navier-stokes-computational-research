@@ -8,6 +8,7 @@ Provide a reproducible, low-ambiguity baseline harness to compare final diagnost
 
 - 2D periodic incompressible setting only.
 - Same viscosity and random seed across resolutions.
+- Smooth deterministic vortex-pair initial condition across resolutions.
 - Same target physical horizon is approximated by scaling `dt` with resolution and recomputing steps.
 - This harness is an engineering comparison tool, not a formal proof framework.
 
@@ -20,6 +21,7 @@ For each resolution run:
 - final max velocity,
 - maximum CFL during the run,
 - validation status from existing validation layer.
+- automatic quality interpretation from heuristic thresholds.
 
 For consecutive resolutions:
 
@@ -39,6 +41,7 @@ For consecutive resolutions:
 - `convergence_metrics.csv` is created.
 - At least one comparative PNG plot is created.
 - `report.html` is created for local static review.
+- `convergence_quality.json` is created for machine-readable interpretation.
 - Every run includes validation status.
 - No NaN/Inf is silently accepted.
 
@@ -48,6 +51,14 @@ For consecutive resolutions:
 - Failures in individual runs raise clear exceptions and stop the harness.
 - Relative differences use `max(abs(reference), 1e-12)` to avoid division-by-zero instability.
 - Static HTML report generation must not require network access.
+- Normal mode runs `32x32` and `64x64`.
+- Extended mode adds `128x128` via `--convergence-extended`.
+
+## Interpretation of relative differences
+
+Relative differences compare final metrics between consecutive resolutions. Smaller values are consistency signals, but they do not prove formal convergence. A large final-energy difference should trigger review of initial-condition comparability, timestep scaling, and whether a separate time-refinement study is needed.
+
+The current interpretation thresholds are documented in `docs/quality_interpretation.md` and should be treated as review heuristics.
 
 ## Next steps for more rigorous studies
 
