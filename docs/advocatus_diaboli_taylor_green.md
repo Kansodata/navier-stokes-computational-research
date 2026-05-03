@@ -17,6 +17,7 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - Puede haber sesgo por suposición de frontera periódica fuera de contexto.
 - Puede haber error de discretización aunque no aparezcan NaN/Inf.
 - Puede haber desalineación entre solución analítica y representación discreta en grilla/tiempo.
+- Puede haber aceptación artificial cuando las tolerancias no existen o son demasiado permisivas.
 
 ## 3. Preguntas críticas obligatorias
 
@@ -26,6 +27,8 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 4. ¿Se comparó la solución exacta en `t=0` y en `t>0` con criterios cuantitativos explícitos?
 5. ¿La energía decae de forma consistente con la tendencia analítica esperada?
 6. ¿La validación distingue entre “ejecución exitosa” y “precisión aceptable”?
+7. ¿El resultado es reproducible al repetir la corrida con la misma configuración?
+8. ¿El error mejora bajo refinamiento de resolución en el mismo horizonte físico?
 
 ## 4. Recomendaciones para la siguiente iteración
 
@@ -34,6 +37,7 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - Agregar comparación en múltiples resoluciones para evaluar robustez.
 - Agregar validación explícita de decaimiento de energía.
 - Reportar siempre resolución, `dt`, número de pasos y norma inicial/final.
+- Agregar un campo explícito de advertencias numéricas en el reporte final.
 - Mantener el disclaimer: este flujo no prueba existencia/suavidad global 3D.
 
 ## 5. Criterios mínimos para aceptar científicamente una corrida Taylor-Green
@@ -43,6 +47,7 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - Reproducibilidad verificable.
 - Configuración completa persistida en JSON.
 - Comparación contra baseline definido.
+- Mejora esperada de error bajo refinamiento.
 - Revisión humana previa a conclusiones científicas.
 
 ## 6. Límites explícitos
@@ -52,6 +57,17 @@ Taylor-Green 2D es un benchmark controlado para verificación numérica localiza
 - No descarta singularidades.
 - No demuestra suavidad global.
 - No reemplaza análisis teórico ni revisión científica externa.
+
+## 7. Relación con el agente
+
+Este documento establece un primer patrón de revisión crítica que puede evolucionar, en futuras iteraciones, hacia componentes del Navier-Stokes Research Agent sin introducir automatización prematura.
+
+Vinculación conceptual:
+
+- `Numerical Safety Gate`: exige precondiciones y rechazo fail-closed ante configuraciones inválidas.
+- `Metrics Analyzer`: evalúa si el resultado contiene evidencia suficiente y no solo ejecución exitosa.
+- `Evidence Logger`: garantiza trazabilidad de configuración, artefactos y límites de interpretación.
+- `Report Builder`: comunica resultados con disclaimers científicos explícitos y lenguaje prudente.
 
 ## Evidencia usada en esta revisión
 
