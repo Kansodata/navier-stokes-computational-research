@@ -78,8 +78,14 @@ def test_taylor_green_convergence_study_writes_summary_and_csv(tmp_path: Path) -
 
     summary_path = Path(result["summary_path"])
     csv_path = Path(result["metrics_csv_path"])
+    plots_dir = Path(result["plots_dir"])
     assert summary_path.exists()
     assert csv_path.exists()
+    assert plots_dir.exists()
+    assert (plots_dir / "taylor_green_l2_error_by_resolution.png").exists()
+    assert (plots_dir / "taylor_green_linf_error_by_resolution.png").exists()
+    assert (plots_dir / "taylor_green_relative_l2_error_by_resolution.png").exists()
+    assert (plots_dir / "taylor_green_combined_error_logscale.png").exists()
 
     payload = json.loads(summary_path.read_text(encoding="utf-8"))
     assert payload["study_name"] == "tg_convergence_test"
@@ -91,6 +97,8 @@ def test_taylor_green_convergence_study_writes_summary_and_csv(tmp_path: Path) -
         "passed_roundoff_floor",
         "human_review_required",
     }
+    assert "artifacts" in payload
+    assert "plots" in payload["artifacts"]
 
 def test_taylor_green_cli_flag_available() -> None:
     parser = build_parser()

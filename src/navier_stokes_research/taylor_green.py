@@ -20,6 +20,7 @@ from navier_stokes_research.config import (
 )
 from navier_stokes_research.initial_conditions import create_initial_vorticity
 from navier_stokes_research.solver import NavierStokesSpectralSolver
+from navier_stokes_research.visualization import save_taylor_green_error_diagnostics
 
 TWO_PI = 2.0 * np.pi
 EPSILON = 1e-12
@@ -443,6 +444,18 @@ def run_taylor_green_convergence_study(
 
     summary_path = study_dir / "taylor_green_convergence_summary.json"
     csv_path = study_dir / "taylor_green_convergence_metrics.csv"
+    plots_dir = study_dir / "plots"
+    plot_artifacts = save_taylor_green_error_diagnostics(
+        rows=rows,
+        output_dir=plots_dir,
+        roundoff_floor=ROUND_OFF_ERROR_FLOOR,
+        include_log_combined=True,
+    )
+    summary["artifacts"] = {
+        "study_dir": str(study_dir),
+        "metrics_csv": str(csv_path),
+        "plots": {name: str(path) for name, path in plot_artifacts.items()},
+    }
     _write_json_atomic(summary_path, summary)
     _write_taylor_green_convergence_csv(rows, csv_path)
 
@@ -450,4 +463,5 @@ def run_taylor_green_convergence_study(
         "study_dir": study_dir,
         "summary_path": summary_path,
         "metrics_csv_path": csv_path,
+        "plots_dir": plots_dir,
     }

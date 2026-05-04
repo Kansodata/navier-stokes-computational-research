@@ -47,6 +47,15 @@ Report content includes:
 - `warnings` list for explicit audit signals,
 - and technical notes.
 
+Taylor-Green convergence mode also writes reproducible diagnostic PNGs by resolution:
+
+- `L2` error,
+- `L∞` error,
+- relative `L2` error,
+- optional combined log-scale plot.
+
+These figures include an explicit `ROUND_OFF_ERROR_FLOOR` reference. If curves saturate near this floor, interpretation should be "roundoff-limited regime" rather than standalone formal convergence proof.
+
 For critical review of interpretation limits and false-positive risks, see:
 
 - `docs/advocatus_diaboli_taylor_green.md`
