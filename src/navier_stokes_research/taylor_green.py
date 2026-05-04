@@ -322,14 +322,15 @@ def run_taylor_green_convergence_study(
         physical_time = config.time.steps * config.time.dt
         exact_u, exact_v = taylor_green_velocity_exact(config.grid, config.physics.viscosity, physical_time)
         errors = _compute_error_metrics(numerical_u, numerical_v, exact_u, exact_v)
-        execution_status = "passed" if all(
-            value is None or np.isfinite(value)
-            for value in errors.values()
-        ) else "failed"
+        execution_status = (
+            "passed"
+            if all(value is None or np.isfinite(value) for value in errors.values())
+            else "failed"
+        )
         accuracy_status, warnings = _evaluate_accuracy_status(
-        errors=errors,
-        tolerances=DEFAULT_TAYLOR_GREEN_ACCURACY_TOLERANCES,
-    )
+            errors=errors,
+            tolerances=DEFAULT_TAYLOR_GREEN_ACCURACY_TOLERANCES,
+        )
         warnings.append("taylor_green_convergence_is_numerical_verification_not_3d_proof")
 
         l2_order = None
