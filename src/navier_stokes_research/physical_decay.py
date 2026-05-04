@@ -17,6 +17,11 @@ from navier_stokes_research.config import (
     TimeConfig,
 )
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.solver import NavierStokesSpectralSolver
+from navier_stokes_research.spectral_diagnostics import (
+    compute_velocity_energy_spectrum_2d,
+    write_spectral_diagnostics_json,
+)
 
 DECAY_RELATIVE_TOLERANCE = 1e-10
 
@@ -63,10 +68,39 @@ def _build_physical_decay_config(base_output_dir: str) -> SimulationConfig:
         output=OutputConfig(
             output_dir=output_dir,
             save_plots=False,
-            save_snapshots=False,
+            save_snapshots=True,
             log_level="INFO",
         ),
     )
+
+
+def _compute_final_spectral_evidence(
+    *,
+    config: SimulationConfig,
+    output_dir: Path,
+) -> tuple[dict[str, Any], Path, Path]:
+    final_snapshot_path = output_dir / "snapshots" / f"vorticity_{config.time.steps:05d}.npy"
+    if not final_snapshot_path.exists():
+        raise RuntimeError("Final vorticity snapshot missing; cannot compute spectral diagnostics.")
+
+    final_vorticity = np.load(final_snapshot_path)
+    solver = NavierStokesSpectralSolver(
+        grid=config.grid,
+        physics=config.physics,
+        time=config.time,
+    )
+    u_final, v_final = solver.velocity_from_vorticity(final_vorticity)
+    spectral_diagnostics = compute_velocity_energy_spectrum_2d(
+        u_final,
+        v_final,
+        config.grid.lx,
+        config.grid.ly,
+    )
+    spectral_path = write_spectral_diagnostics_json(
+        output_dir / "spectral_diagnostics.json",
+        spectral_diagnostics,
+    )
+    return spectral_diagnostics, spectral_path, final_snapshot_path
 
 
 def run_physical_decay_validation(base_output_dir: str = "outputs/benchmarks") -> dict[str, Path]:
@@ -163,6 +197,10 @@ def run_physical_decay_validation(base_output_dir: str = "outputs/benchmarks") -
         physical_decay_status = "passed"
 
     output_dir = Path(config.output.output_dir)
+    spectral_diagnostics, spectral_path, final_snapshot_path = _compute_final_spectral_evidence(
+        config=config,
+        output_dir=output_dir,
+    )
     json_path = output_dir / "physical_decay_validation.json"
     payload = {
         "study_name": "physical_decay_2d",
@@ -176,6 +214,19 @@ def run_physical_decay_validation(base_output_dir: str = "outputs/benchmarks") -
             "initial_enstrophy": float(enstrophy_series[0]),
             "final_enstrophy": float(enstrophy_series[-1]),
             "cfl_peak": cfl_peak,
+        },
+        "spectral_evidence": {
+            "status": "available",
+            "total_spectral_energy": float(spectral_diagnostics["total_spectral_energy"]),
+            "high_wavenumber_energy_fraction": float(
+                spectral_diagnostics["high_wavenumber_energy_fraction"]
+            ),
+            "max_resolved_wavenumber": float(spectral_diagnostics["max_resolved_wavenumber"]),
+            "nyquist_wavenumber_estimate": float(
+                spectral_diagnostics["nyquist_wavenumber_estimate"]
+            ),
+            "artifact": str(spectral_path),
+            "interpretation": "diagnostic_only_not_hard_gate",
         },
         "acceptance_statuses": {
             "runtime_execution": runtime_status,
@@ -193,6 +244,8 @@ def run_physical_decay_validation(base_output_dir: str = "outputs/benchmarks") -
             "metrics_csv": str(run_result["metrics_csv"]),
             "validation_report_path": str(run_result["validation_report_path"]),
             "resolved_config_path": str(output_dir / "resolved_config.json"),
+            "final_vorticity_snapshot": str(final_snapshot_path),
+            "spectral_diagnostics_json": str(spectral_path),
         },
     }
     json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -201,4 +254,6 @@ def run_physical_decay_validation(base_output_dir: str = "outputs/benchmarks") -
         "physical_decay_validation_path": json_path,
         "metrics_csv_path": Path(run_result["metrics_csv"]),
         "validation_report_path": Path(run_result["validation_report_path"]),
+        "final_snapshot_path": final_snapshot_path,
+        "spectral_diagnostics_path": spectral_path,
     }

@@ -142,8 +142,9 @@ python -m navier_stokes_research.cli --physical-decay-validation
 This command runs a controlled 2D unforced viscous decay diagnostic and writes:
 
 - `outputs/benchmarks/physical_decay_2d/physical_decay_validation.json`
+- `outputs/benchmarks/physical_decay_2d/spectral_diagnostics.json`
 
-It is a numerical/physical diagnostic for this bounded 2D setup and is not a formal proof or a 3D Navier-Stokes result.
+It is a numerical/physical diagnostic for this bounded 2D setup and is not a formal proof or a 3D Navier-Stokes result. Spectral evidence is diagnostic only and is not a hard validation gate.
 
 ## Spectral diagnostics
 
