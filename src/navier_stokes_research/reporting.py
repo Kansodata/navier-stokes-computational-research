@@ -17,6 +17,9 @@ TRANSLATIONS = {
         "final_metrics": "Métricas finales",
         "final_metrics_by_resolution": "Métricas finales por resolución",
         "relative_differences": "Diferencias relativas",
+        "estimated_orders": "Órdenes estimados de self-convergence",
+        "acceptance_statuses": "Estados de aceptación",
+        "scientific_acceptance_note": "Nota de aceptación científica",
         "artifacts": "Artefactos",
         "plot": "Gráfico",
         "validation_status": "estado_de_validación",
@@ -54,6 +57,9 @@ TRANSLATIONS = {
         "final_metrics": "Final Metrics",
         "final_metrics_by_resolution": "Final Metrics by Resolution",
         "relative_differences": "Relative Differences",
+        "estimated_orders": "Estimated self-convergence orders",
+        "acceptance_statuses": "Acceptance statuses",
+        "scientific_acceptance_note": "Scientific acceptance note",
         "artifacts": "Artifacts",
         "plot": "Plot",
         "validation_status": "validation_status",
@@ -297,6 +303,8 @@ def generate_convergence_report(output_dir: str | Path, language: str = "es") ->
 
     runs = summary.get("runs", [])
     rel_diffs = summary.get("relative_differences_consecutive", [])
+    estimated_orders = summary.get("estimated_self_convergence_orders", [])
+    acceptance_statuses = summary.get("acceptance_statuses", {})
     warnings = summary.get("warnings", [])
     created_at = summary.get("created_at_utc", "n/a")
     resolutions = [str(run.get("resolution", "n/a")) for run in runs]
@@ -306,6 +314,22 @@ def generate_convergence_report(output_dir: str | Path, language: str = "es") ->
         if warnings
         else f"<p>{_escape(_t(language, 'none'))}</p>"
     )
+
+    acceptance_rows = [
+        ("runtime_execution", _escape(acceptance_statuses.get("runtime_execution", "n/a"))),
+        ("heuristic_consistency", _escape(acceptance_statuses.get("heuristic_consistency", "n/a"))),
+        ("scientific_acceptance", _escape(acceptance_statuses.get("scientific_acceptance", "n/a"))),
+        (
+            "scientific_acceptance_reasons",
+            "<ul>"
+            + "".join(
+                f"<li>{_escape(reason)}</li>"
+                for reason in acceptance_statuses.get("scientific_acceptance_reasons", [])
+            )
+            + "</ul>",
+        ),
+    ]
+    acceptance_table = _render_table(acceptance_rows)
 
     run_rows = []
     for run in runs:
@@ -348,6 +372,28 @@ def generate_convergence_report(output_dir: str | Path, language: str = "es") ->
         + "</table>"
     )
 
+    order_rows = []
+    for row in estimated_orders:
+        order_rows.append(
+            "<tr>"
+            f"<td>{_escape(row.get('coarse_resolution', 'n/a'))}</td>"
+            f"<td>{_escape(row.get('medium_resolution', 'n/a'))}</td>"
+            f"<td>{_escape(row.get('fine_resolution', 'n/a'))}</td>"
+            f"<td>{_format_number(row.get('energy_order', 'n/a'))}</td>"
+            f"<td>{_format_number(row.get('enstrophy_order', 'n/a'))}</td>"
+            f"<td>{_format_number(row.get('max_velocity_order', 'n/a'))}</td>"
+            f"<td>{_escape(row.get('note', 'n/a'))}</td>"
+            "</tr>"
+        )
+    orders_table = (
+        "<table><tr><th>coarse</th><th>medium</th><th>fine</th>"
+        "<th>energy_order</th><th>enstrophy_order</th><th>max_velocity_order</th><th>note</th></tr>"
+        + "".join(order_rows)
+        + "</table>"
+        if order_rows
+        else f"<p>{_escape(_t(language, 'none'))}</p>"
+    )
+
     per_run_links = []
     for run in runs:
         artifacts = run.get("artifacts", {})
@@ -385,6 +431,9 @@ def generate_convergence_report(output_dir: str | Path, language: str = "es") ->
 {_render_diagnosis(quality, language)}
 <p>created_at_utc: <code>{_escape(created_at)}</code></p>
 <p>resolutions: <code>{_escape(", ".join(resolutions))}</code></p>
+<h2>{_escape(_t(language, "acceptance_statuses"))}</h2>
+{acceptance_table}
+<p class="disclaimer">{_escape(_t(language, "scientific_acceptance_note"))}: self-convergence order is diagnostic evidence only; formal acceptance still requires an exact/reference solution error study.</p>
 <h2>{_escape(_t(language, "warnings"))}</h2>
 {warnings_html}
 <h2>{_escape(_t(language, "final_metrics_by_resolution"))}</h2>
@@ -392,6 +441,8 @@ def generate_convergence_report(output_dir: str | Path, language: str = "es") ->
 <h2>{_escape(_t(language, "relative_differences"))}</h2>
 {diffs_table}
 <p>{_escape(_t(language, "relative_note"))}</p>
+<h2>{_escape(_t(language, "estimated_orders"))}</h2>
+{orders_table}
 <h2>{_escape(_t(language, "artifacts"))}</h2>
 <ul>
 <li>{_artifact_link(base_dir, summary_path, "convergence_summary.json", language)}</li>

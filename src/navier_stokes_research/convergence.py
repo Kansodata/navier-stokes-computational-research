@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,7 +30,7 @@ from navier_stokes_research.runner import run_simulation
 
 
 DEFAULT_RESOLUTIONS = (32, 64)
-EXTENDED_RESOLUTIONS = (32, 64, 128)
+EXTENDED_RESOLUTIONS = (32, 64, 128, 256, 512)
 DEFAULT_BASE_RESOLUTION = 64
 DEFAULT_BASE_DT = 0.0015
 DEFAULT_FINAL_TIME = 0.24
@@ -40,6 +41,77 @@ DEFAULT_SEED = 2026
 def _relative_difference(reference: float, candidate: float, epsilon: float = 1e-12) -> float:
     denominator = max(abs(reference), epsilon)
     return abs(candidate - reference) / denominator
+
+
+def _safe_self_convergence_order(
+    delta_coarse: float,
+    delta_fine: float,
+    refinement_ratio: float,
+    epsilon: float = 1e-14,
+) -> float | None:
+    """Estimate self-convergence order from three consecutive refinements.
+
+    Uses p = log(delta_coarse / delta_fine) / log(r), where deltas are
+    absolute differences between consecutive scalar observables.
+    This is diagnostic evidence, not a formal proof of convergence.
+    """
+    if refinement_ratio <= 1.0:
+        return None
+    if delta_coarse <= epsilon or delta_fine <= epsilon:
+        return None
+    return math.log(delta_coarse / delta_fine) / math.log(refinement_ratio)
+
+
+def _estimate_self_convergence_orders(
+    rows: list[dict[str, float | int | str | None]],
+) -> list[dict[str, float | int | str | None]]:
+    estimates: list[dict[str, float | int | str | None]] = []
+    metrics = (
+        ("energy", "final_energy"),
+        ("enstrophy", "final_enstrophy"),
+        ("max_velocity", "final_max_velocity"),
+    )
+
+    for idx in range(2, len(rows)):
+        coarse = rows[idx - 2]
+        medium = rows[idx - 1]
+        fine = rows[idx]
+
+        n0 = int(coarse["resolution"])
+        n1 = int(medium["resolution"])
+        n2 = int(fine["resolution"])
+
+        ratio_01 = n1 / n0
+        ratio_12 = n2 / n1
+        uniform_ratio = abs(ratio_01 - ratio_12) <= 1e-12
+
+        estimate: dict[str, float | int | str | None] = {
+            "coarse_resolution": n0,
+            "medium_resolution": n1,
+            "fine_resolution": n2,
+            "refinement_ratio": ratio_12 if uniform_ratio else None,
+            "method": "self_convergence_order_log_delta_ratio",
+            "note": (
+                "diagnostic_only_not_formal_proof"
+                if uniform_ratio
+                else "non_uniform_refinement_ratio"
+            ),
+        }
+
+        for metric_name, field_name in metrics:
+            delta_coarse = abs(float(medium[field_name]) - float(coarse[field_name]))
+            delta_fine = abs(float(fine[field_name]) - float(medium[field_name]))
+            estimate[f"{metric_name}_delta_coarse"] = delta_coarse
+            estimate[f"{metric_name}_delta_fine"] = delta_fine
+            estimate[f"{metric_name}_order"] = (
+                _safe_self_convergence_order(delta_coarse, delta_fine, ratio_12)
+                if uniform_ratio
+                else None
+            )
+
+        estimates.append(estimate)
+
+    return estimates
 
 
 def _build_convergence_config(
@@ -236,6 +308,13 @@ def run_convergence_study(
     plot_path = study_dir / "convergence_comparison.png"
     _save_comparison_plot(rows, plot_path)
 
+    estimated_orders = _estimate_self_convergence_orders(rows)
+    runtime_execution_status = (
+        "passed"
+        if not warnings and all(run.get("validation_status") == "pass" for run in runs)
+        else "warning"
+    )
+
     summary = {
         "study_name": study_name,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -265,7 +344,18 @@ def run_convergence_study(
             }
             for idx in range(1, len(rows))
         ],
+        "estimated_self_convergence_orders": estimated_orders,
         "warnings": warnings,
+        "acceptance_statuses": {
+            "runtime_execution": runtime_execution_status,
+            "heuristic_consistency": "pending_quality_interpretation",
+            "scientific_acceptance": "human_review_required",
+            "scientific_acceptance_reasons": [
+                "baseline_2d_only",
+                "no_exact_reference_solution_used_in_this_study",
+                "self_convergence_orders_are_diagnostic_not_formal_proof",
+            ],
+        },
         "artifacts": {
             "study_dir": str(study_dir),
             "convergence_metrics_csv": str(csv_path),
@@ -278,6 +368,7 @@ def run_convergence_study(
     quality_path = study_dir / "convergence_quality.json"
     write_quality_report(quality_path, quality)
     summary["quality_interpretation"] = quality
+    summary["acceptance_statuses"]["heuristic_consistency"] = str(quality.get("status", "unknown"))
     summary["artifacts"]["convergence_quality_json"] = str(quality_path)
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     report_path = generate_convergence_report(study_dir, language="es")

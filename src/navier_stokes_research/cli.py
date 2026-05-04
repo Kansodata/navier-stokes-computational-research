@@ -8,7 +8,7 @@ from navier_stokes_research.config import load_config
 from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.runner import run_simulation
-from navier_stokes_research.taylor_green import run_taylor_green_validation
+from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -68,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run controlled 2D Taylor-Green validation and write taylor_green_validation.json.",
     )
+    parser.add_argument(
+        "--taylor-green-convergence",
+        action="store_true",
+        help="Run Taylor-Green validation across resolutions and estimate error convergence orders.",
+    )
     return parser
 
 
@@ -91,9 +96,14 @@ def main() -> None:
         run_taylor_green_validation(base_output_dir=args.benchmark_output_dir)
         return
 
+    if args.taylor_green_convergence:
+        configure_logging("INFO")
+        run_taylor_green_convergence_study(base_output_dir=args.benchmark_output_dir)
+        return
+
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark or --convergence-study is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, or --taylor-green-convergence is used."
         )
 
     config = load_config(args.config)
