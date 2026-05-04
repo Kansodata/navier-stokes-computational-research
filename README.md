@@ -117,6 +117,8 @@ This command writes:
 
 The report includes resolved configuration, domain, resolution, viscosity, final physical time, finite error metrics (`L2`, `L∞`, and relative error when numerically meaningful), and explicit status separation (`execution_status` vs `accuracy_status`) with `warnings`.
 
+Taylor-Green convergence artifacts also include deterministic diagnostic plots by resolution (`L2`, `L∞`, relative `L2`, and a combined log-scale view) with explicit `ROUND_OFF_ERROR_FLOOR` reference lines.
+
 ## Run Taylor-Green 2D convergence validation
 
 ```bash
@@ -211,6 +213,7 @@ For Taylor-Green convergence outputs:
 - Convergence harness is a baseline consistency study, not a formal convergence proof.
 - Quality thresholds are heuristic review aids, not mathematical criteria.
 - Taylor-Green validation is a controlled 2D case and does not prove global existence/smoothness for 3D Navier-Stokes.
+- Near-floor error saturation in Taylor-Green convergence diagnostics indicates roundoff-limited behavior, not a standalone formal convergence proof.
 
 ## Future research roadmap
 
