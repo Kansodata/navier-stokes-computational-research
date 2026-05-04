@@ -14,8 +14,15 @@ This pipeline does not modify the solver. It defines the review process used to 
 
 The current validation agents are:
 
+- `kansodata-numerical-methods-auditor`
 - `kansodata-physical-validator`
 - `kansodata-advocatus-diaboli`
+
+### `kansodata-numerical-methods-auditor`
+
+Evaluates whether the numerical method, implementation choices, stability constraints, convergence evidence, and diagnostic interpretations are technically defensible.
+
+It reviews spatial discretization, temporal discretization, spectral operators, vorticity-streamfunction consistency, nonlinear-term formulation, de-aliasing treatment, stability margins, convergence diagnostics, roundoff-floor behavior, and numerical false-positive risk.
 
 ### `kansodata-physical-validator`
 
@@ -36,15 +43,47 @@ It challenges overstatements, unsupported generalizations, unclear scope, and cl
 Collect the minimum evidence package:
 
 - resolved simulation configuration;
+- numerical-method description;
 - physical diagnostics payload;
 - run metadata;
 - validation artifacts;
+- convergence or benchmark artifacts when relevant;
 - git commit;
 - relevant plots or spectra when available.
 
 The run must not proceed to scientific acceptance if the minimum evidence package is missing.
 
-### Step 2: Physical validation
+### Step 2: Numerical-method audit
+
+Agent:
+
+- `kansodata-numerical-methods-auditor`
+
+Required inputs:
+
+- git commit or branch under review;
+- resolved simulation configuration;
+- solver method description;
+- grid resolution and domain;
+- timestep and final physical time;
+- viscosity;
+- initial condition definition;
+- de-aliasing metadata;
+- validation JSON artifacts;
+- convergence summary JSON when relevant;
+- metrics CSV or summarized time-series when relevant.
+
+Possible outputs:
+
+- `NUMERICALLY ACCEPTABLE`
+- `NUMERICALLY SUSPICIOUS`
+- `NUMERICALLY INVALID`
+- `INSUFFICIENT NUMERICAL EVIDENCE`
+- `REQUIRES MORE NUMERICAL TESTING`
+
+Numerical-method acceptance is required before physical interpretation. Low numerical error must not be interpreted as physical validity.
+
+### Step 3: Physical validation
 
 Agent:
 
@@ -59,7 +98,8 @@ Required inputs:
 - timestep;
 - physical time;
 - initial condition;
-- de-aliasing method.
+- de-aliasing method;
+- numerical-method audit verdict.
 
 Possible outputs:
 
@@ -70,7 +110,7 @@ Possible outputs:
 
 A low numerical error does not automatically imply physical validity.
 
-### Step 3: Claim formulation
+### Step 4: Claim formulation
 
 Claims must be narrowly scoped and tied to available evidence.
 
@@ -78,12 +118,13 @@ A valid claim must state:
 
 - what was tested;
 - under which configuration;
-- which metrics support the statement;
+- which numerical diagnostics support the statement;
+- which physical metrics support the statement;
 - what remains outside the validated scope.
 
 A single benchmark must not be used to justify broad turbulence, 3D, singularity, or general robustness claims.
 
-### Step 4: Adversarial claim review
+### Step 5: Adversarial claim review
 
 Agent:
 
@@ -94,7 +135,9 @@ Required inputs:
 - claim under review;
 - available evidence;
 - validation scope;
+- numerical-method audit verdict;
 - numerical diagnostics if relevant;
+- physical validation verdict;
 - physical diagnostics if relevant;
 - paths or links to supporting artifacts when available.
 
@@ -106,10 +149,11 @@ Possible outputs:
 - `REQUIRES NARROWING`
 - `REQUIRES MORE EVIDENCE`
 
-### Step 5: Final gate
+### Step 6: Final gate
 
 A result may be accepted only if:
 
+- numerical-method audit is `NUMERICALLY ACCEPTABLE`, or explicitly scoped as requiring more numerical testing;
 - physical validation is `VALID`, or explicitly scoped as diagnostic evidence rather than physical proof;
 - adversarial review is not `UNSUPPORTED CLAIM`;
 - adversarial review is not `OVERSTATED CLAIM`;
@@ -119,12 +163,13 @@ Otherwise the result must be rejected, narrowed, or sent back for more evidence.
 
 ## Fail-Closed Rules
 
+- Missing numerical-method artifacts must produce `INSUFFICIENT NUMERICAL EVIDENCE` or rejection.
 - Missing physical diagnostics must produce `INSUFFICIENT DATA` or rejection.
 - Missing claim scope must produce `UNSUPPORTED CLAIM`.
 - Numerical accuracy alone cannot imply physical validity.
 - Physical validity alone cannot imply broad scientific generality.
 - A single benchmark cannot justify general turbulence or 3D claims.
-- The pipeline must not invent missing configuration, diagnostics, spectra, or validation artifacts.
+- The pipeline must not invent missing configuration, diagnostics, spectra, validation artifacts, or method details.
 
 ## Final Decision States
 
@@ -142,10 +187,13 @@ Each reviewed result should include:
 
 - simulation configuration;
 - git commit;
+- numerical-method description;
+- numerical diagnostics or convergence artifacts when relevant;
 - physical diagnostics payload;
 - validation JSON;
 - optional plots or spectra;
 - claim text;
+- `kansodata-numerical-methods-auditor` verdict;
 - `kansodata-physical-validator` verdict;
 - `kansodata-advocatus-diaboli` verdict.
 
@@ -157,6 +205,7 @@ Unsafe claim:
 
 Expected outcome:
 
+- `kansodata-numerical-methods-auditor`: `REQUIRES MORE NUMERICAL TESTING` unless nonlinear, de-aliasing, convergence, and spectral diagnostics support the claim.
 - `kansodata-physical-validator`: insufficient unless nonlinear and spectral diagnostics exist.
 - `kansodata-advocatus-diaboli`: `OVERSTATED CLAIM` or `UNSUPPORTED CLAIM`.
 
