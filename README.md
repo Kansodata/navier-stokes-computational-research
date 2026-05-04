@@ -133,6 +133,18 @@ This command runs the controlled analytical Taylor-Green case across the default
 
 This harness compares numerical velocity fields against the analytical 2D Taylor-Green velocity solution. When errors reach the configured roundoff floor, convergence-order estimates are intentionally omitted to avoid reporting numerical-noise artifacts. A `formal_error_convergence` value of `passed_roundoff_floor` means the controlled 2D analytical case matched to machine precision under the configured tolerances.
 
+## Run physical decay validation
+
+```bash
+python -m navier_stokes_research.cli --physical-decay-validation
+```
+
+This command runs a controlled 2D unforced viscous decay diagnostic and writes:
+
+- `outputs/benchmarks/physical_decay_2d/physical_decay_validation.json`
+
+It is a numerical/physical diagnostic for this bounded 2D setup and is not a formal proof or a 3D Navier-Stokes result.
+
 ## Local static visual reports
 
 Reports are local static HTML files with embedded CSS and no external dependencies. They are generated in Spanish by default and can be opened directly from the filesystem:
@@ -222,5 +234,5 @@ For Taylor-Green convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), and [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), and [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
 
