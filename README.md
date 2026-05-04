@@ -16,6 +16,7 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - Produces machine-readable validation JSON.
 - Provides a reproducible benchmark command and artifact set.
 - Provides a reproducible convergence study harness.
+- Provides Taylor-Green 2D analytical validation and multi-resolution error diagnostics.
 - Produces local static HTML reports in Spanish by default.
 - Writes automatic quality interpretation JSON files for benchmark and convergence runs.
 
@@ -24,6 +25,7 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - It does not claim physical truth for general turbulence regimes.
 - It does not establish convergence proofs or theoretical guarantees.
 - It does not cover non-periodic boundaries in this baseline.
+- It does not solve the 3D Navier-Stokes Millennium problem.
 
 ## Installation
 
@@ -81,7 +83,7 @@ The benchmark run also generates a local static report:
 python -m navier_stokes_research.cli --convergence-study
 ```
 
-Optional extended mode adds `128x128` to the default `32x32`, `64x64` study:
+Default mode runs the `32x32`, `64x64` baseline study. Extended mode runs the larger refinement sequence `32x32`, `64x64`, `128x128`, `256x256`, and `512x512`:
 
 ```bash
 python -m navier_stokes_research.cli --convergence-study --convergence-extended
@@ -101,6 +103,8 @@ Default study artifacts are written under:
 - `outputs/convergence/baseline_resolution_study/report.html`
 - `outputs/convergence/baseline_resolution_study/convergence_quality.json`
 
+The convergence report separates runtime execution, heuristic consistency, and scientific acceptance. Estimated self-convergence orders are diagnostic evidence only and are not formal proof.
+
 ## Run Taylor-Green 2D validation
 
 ```bash
@@ -112,6 +116,20 @@ This command writes:
 - `outputs/benchmarks/taylor_green_2d/taylor_green_validation.json`
 
 The report includes resolved configuration, domain, resolution, viscosity, final physical time, finite error metrics (`L2`, `L∞`, and relative error when numerically meaningful), and explicit status separation (`execution_status` vs `accuracy_status`) with `warnings`.
+
+## Run Taylor-Green 2D convergence validation
+
+```bash
+python -m navier_stokes_research.cli --taylor-green-convergence
+```
+
+This command runs the controlled analytical Taylor-Green case across the default resolutions `32x32`, `64x64`, `128x128`, and `256x256`. It writes:
+
+- `outputs/benchmarks/taylor_green_convergence_2d/taylor_green_convergence_summary.json`
+- `outputs/benchmarks/taylor_green_convergence_2d/taylor_green_convergence_metrics.csv`
+- `outputs/benchmarks/taylor_green_convergence_2d/n*/taylor_green_2d/taylor_green_validation.json`
+
+This harness compares numerical velocity fields against the analytical 2D Taylor-Green velocity solution. When errors reach the configured roundoff floor, convergence-order estimates are intentionally omitted to avoid reporting numerical-noise artifacts. A `formal_error_convergence` value of `passed_roundoff_floor` means the controlled 2D analytical case matched to machine precision under the configured tolerances.
 
 ## Local static visual reports
 
@@ -146,15 +164,26 @@ For convergence outputs:
 
 - `relative_differences_consecutive` reports relative deltas of final metrics between adjacent resolutions.
 - Lower relative differences are a consistency signal across refinements.
+- Estimated self-convergence orders are diagnostic only and require scientific review.
 - This does not prove formal numerical convergence by itself.
 - Automatic quality status uses heuristic thresholds documented in `docs/quality_interpretation.md`.
+
+For Taylor-Green convergence outputs:
+
+- `l2_error`, `linf_error`, and `relative_error` compare against the analytical 2D Taylor-Green velocity solution.
+- `accuracy_status=passed` means configured error tolerances were satisfied.
+- `formal_error_convergence=passed_roundoff_floor` means the analytical case matched to machine precision and convergence-order estimation was suppressed because the remaining error is numerical roundoff noise.
+- Taylor-Green validation remains a controlled 2D verification case, not a 3D existence/smoothness proof.
 
 ## Reproducibility guarantees
 
 - Seed-controlled random initial condition generation.
 - Fixed benchmark parameters in code.
 - Fixed convergence-study default parameters in code (`32x32`, `64x64`) and fixed seed.
+- Fixed extended convergence-study parameters in code (`32x32`, `64x64`, `128x128`, `256x256`, `512x512`).
+- Fixed Taylor-Green convergence-study parameters in code (`32x32`, `64x64`, `128x128`, `256x256`).
 - Convergence study uses a smooth deterministic vortex-pair initial condition for better comparability across resolutions.
+- Taylor-Green convergence study uses a controlled analytical 2D velocity solution.
 - Persisted `resolved_config.json` per run.
 - Deterministic benchmark artifact path under `outputs/benchmarks/`.
 
@@ -166,10 +195,11 @@ For convergence outputs:
 - `src/navier_stokes_research/validation/`: validation checks and JSON reporting.
 - `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
 - `src/navier_stokes_research/convergence.py`: reproducible convergence-study harness.
+- `src/navier_stokes_research/taylor_green.py`: controlled Taylor-Green analytical validation and convergence harness.
 - `src/navier_stokes_research/interpretation.py`: heuristic quality interpretation.
 - `src/navier_stokes_research/runner.py`: simulation orchestration.
 - `src/navier_stokes_research/cli.py`: terminal entrypoint.
-- `tests/`: deterministic unit tests for numerics, validation, and benchmark.
+- `tests/`: deterministic unit tests for numerics, validation, benchmark, reporting, and Taylor-Green validation.
 - `docs/`: research notes and validation protocol.
 
 ## Current limitations
