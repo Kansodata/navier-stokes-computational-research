@@ -25,6 +25,7 @@ class TimeConfig:
 @dataclass(frozen=True)
 class PhysicsConfig:
     viscosity: float = 0.001
+    dealiasing_enabled: bool = True
 
 
 @dataclass(frozen=True)

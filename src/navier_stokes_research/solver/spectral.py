@@ -42,7 +42,11 @@ class NavierStokesSpectralSolver:
         self.inv_laplacian = np.zeros_like(self.laplacian, dtype=float)
         mask = self.laplacian != 0.0
         self.inv_laplacian[mask] = 1.0 / self.laplacian[mask]
-        self.dealias = dealias_mask(grid.nx, grid.ny)
+        self.dealias = (
+            dealias_mask(grid.nx, grid.ny)
+            if physics.dealiasing_enabled
+            else np.ones((grid.nx, grid.ny), dtype=bool)
+        )
 
     def solve_streamfunction(self, vorticity: np.ndarray) -> np.ndarray:
         vorticity_hat = np.fft.fft2(vorticity)
@@ -92,10 +96,13 @@ class NavierStokesSpectralSolver:
     def _rhs(self, vorticity: np.ndarray) -> np.ndarray:
         u, v = self.velocity_from_vorticity(vorticity)
         omega_hat = np.fft.fft2(vorticity)
-        omega_hat *= self.dealias
         dwdx, dwdy = spectral_gradient(omega_hat, self.kx, self.ky)
+        nonlinear = u * dwdx + v * dwdy
+        nonlinear_hat = np.fft.fft2(nonlinear)
+        nonlinear_hat *= self.dealias
+        nonlinear_dealiased = np.fft.ifft2(nonlinear_hat).real
         laplace_omega = np.fft.ifft2(self.laplacian * omega_hat).real
-        rhs = -(u * dwdx + v * dwdy) + self.physics.viscosity * laplace_omega
+        rhs = -nonlinear_dealiased + self.physics.viscosity * laplace_omega
         assert_finite("rhs", rhs)
         return rhs
 

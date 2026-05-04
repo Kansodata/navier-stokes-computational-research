@@ -55,6 +55,9 @@ def test_taylor_green_validation_writes_expected_json(tmp_path: Path) -> None:
     assert "linf" in payload["errors"]
     assert np.isfinite(payload["errors"]["l2"])
     assert np.isfinite(payload["errors"]["linf"])
+    assert payload["execution_status"] == "passed"
+    if payload["errors"]["relative"] is not None:
+        assert payload["errors"]["relative"] <= 1e-10
 
 
 

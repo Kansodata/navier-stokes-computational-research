@@ -70,6 +70,25 @@ The solver enforces:
 
 Validation additionally summarizes these checks in JSON for downstream audit pipelines.
 
+## Spectral de-aliasing / Orszag 2/3 rule
+
+The pseudo-spectral solver applies an explicit Orszag 2/3 mask to the nonlinear convective term in Fourier space.
+
+- Default behavior: de-aliasing enabled (`physics.dealiasing_enabled=true`).
+- Controlled comparison mode: de-aliasing can be disabled (`physics.dealiasing_enabled=false`).
+- Scope in this baseline: masking is applied to the nonlinear term only; no 3/2 padding is used in this iteration.
+
+Why this is used:
+
+- reduce aliasing contamination from nonlinear mode interactions,
+- improve numerical robustness of spectral transfer diagnostics,
+- preserve a reversible control path for A/B comparison.
+
+Limits:
+
+- this is a numerical-stability control, not a proof of full nonlinear generalization,
+- it does not establish 3D global regularity or solve the Millennium problem.
+
 ## Reproducibility rules
 
 - Use explicit seed in initial conditions.

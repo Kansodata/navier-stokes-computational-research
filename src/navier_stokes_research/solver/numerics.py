@@ -23,6 +23,7 @@ def spectral_gradient(field_hat: np.ndarray, kx: np.ndarray, ky: np.ndarray) -> 
 
 
 def dealias_mask(nx: int, ny: int) -> np.ndarray:
+    """Build Orszag 2/3-rule spectral mask for 2D Fourier modes."""
     cutoff_x = nx // 3
     cutoff_y = ny // 3
     freq_x = np.fft.fftfreq(nx) * nx
