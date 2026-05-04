@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import numpy as np
 
+from .physical import total_enstrophy, total_kinetic_energy
+
 
 def compute_energy(u: np.ndarray, v: np.ndarray, dx: float, dy: float) -> float:
-    return float(0.5 * np.sum(u**2 + v**2) * dx * dy)
+    return total_kinetic_energy(u=u, v=v, dx=dx, dy=dy)
 
 
 def compute_enstrophy(vorticity: np.ndarray, dx: float, dy: float) -> float:
-    return float(0.5 * np.sum(vorticity**2) * dx * dy)
+    return total_enstrophy(vorticity=vorticity, dx=dx, dy=dy)
 
 
 def compute_max_velocity(u: np.ndarray, v: np.ndarray) -> float:
