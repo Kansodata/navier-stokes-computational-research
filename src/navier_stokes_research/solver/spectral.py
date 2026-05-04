@@ -46,7 +46,7 @@ class NavierStokesSpectralSolver:
 
     def solve_streamfunction(self, vorticity: np.ndarray) -> np.ndarray:
         vorticity_hat = np.fft.fft2(vorticity)
-        psi_hat = self.inv_laplacian * vorticity_hat
+        psi_hat = -self.inv_laplacian * vorticity_hat
         psi_hat[0, 0] = 0.0
         streamfunction = np.fft.ifft2(psi_hat).real
         assert_finite("streamfunction", streamfunction)

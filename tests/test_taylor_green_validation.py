@@ -9,7 +9,9 @@ from navier_stokes_research.cli import build_parser
 from navier_stokes_research.config import GridConfig
 from navier_stokes_research.initial_conditions.factory import create_initial_vorticity
 from navier_stokes_research.taylor_green import (
+    _safe_error_convergence_order,
     build_taylor_green_config,
+    run_taylor_green_convergence_study,
     run_taylor_green_validation,
     taylor_green_velocity_exact,
 )
@@ -55,7 +57,48 @@ def test_taylor_green_validation_writes_expected_json(tmp_path: Path) -> None:
     assert np.isfinite(payload["errors"]["linf"])
 
 
+
+def test_safe_error_convergence_order() -> None:
+    assert _safe_error_convergence_order(0.25, 0.0625, 2.0) == np.float64(2.0)
+    assert _safe_error_convergence_order(0.25, 0.5, 2.0) < 0.0
+    assert _safe_error_convergence_order(None, 0.5, 2.0) is None
+    assert _safe_error_convergence_order(1e-15, 1e-15, 2.0) is None
+
+
+def test_taylor_green_convergence_study_writes_summary_and_csv(tmp_path: Path) -> None:
+    result = run_taylor_green_convergence_study(
+        base_output_dir=str(tmp_path / "benchmarks"),
+        study_name="tg_convergence_test",
+        resolutions=(16, 32, 64),
+        base_resolution=16,
+        base_dt=0.001,
+        final_time=0.002,
+        viscosity=0.001,
+    )
+
+    summary_path = Path(result["summary_path"])
+    csv_path = Path(result["metrics_csv_path"])
+    assert summary_path.exists()
+    assert csv_path.exists()
+
+    payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert payload["study_name"] == "tg_convergence_test"
+    assert payload["inputs"]["resolutions"] == [16, 32, 64]
+    assert len(payload["runs"]) == 3
+    assert len(payload["orders"]) == 2
+    assert payload["acceptance_statuses"]["scientific_acceptance"] == "human_review_required"
+    assert payload["acceptance_statuses"]["formal_error_convergence"] in {
+        "passed_roundoff_floor",
+        "human_review_required",
+    }
+
 def test_taylor_green_cli_flag_available() -> None:
     parser = build_parser()
     args = parser.parse_args(["--taylor-green-validation"])
     assert args.taylor_green_validation is True
+
+
+def test_taylor_green_convergence_cli_flag_available() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--taylor-green-convergence"])
+    assert args.taylor_green_convergence is True

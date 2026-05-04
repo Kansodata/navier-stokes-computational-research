@@ -67,6 +67,23 @@ def test_generate_convergence_report_from_minimal_artifacts(tmp_path: Path) -> N
                 "relative_differences_consecutive": [
                     {"from_resolution": 16, "to_resolution": 32, "energy": 0.1, "enstrophy": 0.1, "max_velocity": 0.1}
                 ],
+                "estimated_self_convergence_orders": [
+                    {
+                        "coarse_resolution": 16,
+                        "medium_resolution": 32,
+                        "fine_resolution": 64,
+                        "energy_order": 1.5,
+                        "enstrophy_order": 1.25,
+                        "max_velocity_order": 0.75,
+                        "note": "diagnostic_only_not_formal_proof",
+                    }
+                ],
+                "acceptance_statuses": {
+                    "runtime_execution": "passed",
+                    "heuristic_consistency": "aprobado",
+                    "scientific_acceptance": "human_review_required",
+                    "scientific_acceptance_reasons": ["test <reason>"],
+                },
                 "warnings": ["warn <html>"],
             }
         ),
@@ -78,6 +95,10 @@ def test_generate_convergence_report_from_minimal_artifacts(tmp_path: Path) -> N
     content = report.read_text(encoding="utf-8")
     assert "Reporte de estudio de convergencia" in content
     assert "Diagnóstico automático" in content
+    assert "Estados de aceptación" in content
+    assert "Órdenes estimados de self-convergence" in content
+    assert "human_review_required" in content
+    assert "diagnostic_only_not_formal_proof" in content
     assert "study&lt;1&gt;" in content
     assert "warn &lt;html&gt;" in content
 
