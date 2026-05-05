@@ -86,6 +86,16 @@ For baseline acceptance:
 - validation status is generated with machine-readable report,
 - and artifacts are reproducible for fixed benchmark parameters within numeric tolerances.
 
+## Scientific citation traceability
+
+Scientific evidence mapping for each validation component is maintained in:
+
+- `docs/validation_evidence_matrix.md`
+
+Primary references are curated in:
+
+- `docs/references.bib`
+
 ## Convergence study protocol
 
 The convergence harness runs a fixed seeded scenario over multiple resolutions and writes:
