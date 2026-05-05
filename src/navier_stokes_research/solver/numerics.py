@@ -30,3 +30,9 @@ def dealias_mask(nx: int, ny: int) -> np.ndarray:
     mask_x = np.abs(freq_x) < cutoff_x
     mask_y = np.abs(freq_y) < cutoff_y
     return mask_x[:, None] & mask_y[None, :]
+
+
+def apply_dealias(field_hat: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    if field_hat.shape != mask.shape:
+        raise ValueError("field_hat and mask must have identical shape for de-aliasing.")
+    return field_hat * mask
