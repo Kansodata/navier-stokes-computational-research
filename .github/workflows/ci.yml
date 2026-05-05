@@ -53,3 +53,7 @@ jobs:
       - name: Run time refinement 2D
         run: |
           python -m navier_stokes_research.cli --time-refinement-2d
+
+      - name: Fail closed on validation artifact statuses
+        run: |
+          python scripts/check_validation_status.py
