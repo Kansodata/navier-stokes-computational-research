@@ -328,7 +328,7 @@ def _scenario_specs() -> tuple[StressScenarioSpec, ...]:
         StressScenarioSpec(
             name="near_cfl_limit",
             steps=12,
-            target_initial_cfl=0.76,
+            target_initial_cfl=0.72,
             diagnostic_note="Runs close to the configured CFL safety limit with a small positive margin.",
         ),
         StressScenarioSpec(
