@@ -11,6 +11,7 @@ from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
 from navier_stokes_research.stress_validation import run_stress_validation_2d
+from navier_stokes_research.time_refinement import run_time_refinement_validation_2d
 from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
 
 
@@ -91,6 +92,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run external-reference validation harness and write external_reference_validation_summary.json.",
     )
+    parser.add_argument(
+        "--time-refinement-2d",
+        action="store_true",
+        help="Run 2D time-refinement validation harness and write time_refinement_summary.json.",
+    )
     return parser
 
 
@@ -134,9 +140,14 @@ def main() -> None:
         run_external_reference_validation_2d(base_output_dir=args.benchmark_output_dir)
         return
 
+    if args.time_refinement_2d:
+        configure_logging("INFO")
+        run_time_refinement_validation_2d(base_output_dir=args.benchmark_output_dir)
+        return
+
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, or --external-validation-2d is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, or --time-refinement-2d is used."
         )
 
     config = load_config(args.config)
