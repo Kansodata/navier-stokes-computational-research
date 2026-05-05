@@ -8,6 +8,9 @@ from navier_stokes_research.config import load_config
 from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.external_validation import run_external_reference_validation_2d
 from navier_stokes_research.logging_utils import configure_logging
+from navier_stokes_research.multi_resolution_validation import (
+    run_multi_resolution_energy_enstrophy_validation_2d,
+)
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
 from navier_stokes_research.stress_validation import run_stress_validation_2d
@@ -97,6 +100,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run 2D time-refinement validation harness and write time_refinement_summary.json.",
     )
+    parser.add_argument(
+        "--multi-resolution-energy-enstrophy-2d",
+        action="store_true",
+        help="Run 2D multi-resolution energy/enstrophy regression harness and write multi_resolution_energy_enstrophy_summary.json.",
+    )
     return parser
 
 
@@ -145,9 +153,16 @@ def main() -> None:
         run_time_refinement_validation_2d(base_output_dir=args.benchmark_output_dir)
         return
 
+    if args.multi_resolution_energy_enstrophy_2d:
+        configure_logging("INFO")
+        run_multi_resolution_energy_enstrophy_validation_2d(
+            base_output_dir=args.benchmark_output_dir
+        )
+        return
+
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, or --time-refinement-2d is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, or --multi-resolution-energy-enstrophy-2d is used."
         )
 
     config = load_config(args.config)

@@ -160,6 +160,7 @@ This command runs a controlled scenario matrix that attempts to stress the 2D so
 The harness records `passed`, `warning`, `failed`, and `expected_fail_closed` outcomes. Expected fail-closed CFL cases do not count as global failures when they fail for the configured expected reason. Spectral high-wavenumber evidence is diagnostic only and is not a hard gate.
 External-reference 2D harness command: `python -m navier_stokes_research.cli --external-validation-2d`.
 Time-refinement 2D harness command: `python -m navier_stokes_research.cli --time-refinement-2d` -> `outputs/benchmarks/time_refinement_2d/time_refinement_summary.json`.
+Multi-resolution energy/enstrophy 2D harness command: `python -m navier_stokes_research.cli --multi-resolution-energy-enstrophy-2d` -> `outputs/benchmarks/multi_resolution_energy_enstrophy_2d/multi_resolution_energy_enstrophy_summary.json` (2D periodic diagnostic/regression only, not a formal convergence proof).
 
 ## Spectral diagnostics
 
