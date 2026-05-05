@@ -17,6 +17,8 @@ The current validation agents are:
 - `kansodata-numerical-methods-auditor`
 - `kansodata-physical-validator`
 - `kansodata-advocatus-diaboli`
+- `kansodata-scientific-literature-auditor`
+- `kansodata-chief-scientific-reviewer` (primus inter pares coordinator)
 
 ### `kansodata-numerical-methods-auditor`
 
@@ -35,6 +37,18 @@ It reviews energy, enstrophy, viscosity, resolution, timestep, initial condition
 Evaluates whether a scientific claim is actually supported by available evidence.
 
 It challenges overstatements, unsupported generalizations, unclear scope, and claims that exceed the validated regime.
+
+### `kansodata-scientific-literature-auditor`
+
+Evaluates whether scientific statements and validation framing are backed by reliable bibliographic evidence, with explicit evidence levels and scope limits.
+
+### `kansodata-chief-scientific-reviewer`
+
+Integrates specialist reports as primus inter pares, resolves contradictions with fail-closed policy, classifies `P0/P1/P2`, and emits final decision:
+
+- `approved`
+- `approved_with_observations`
+- `blocked`
 
 ## Pipeline Order
 
@@ -157,9 +171,12 @@ A result may be accepted only if:
 - physical validation is `VALID`, or explicitly scoped as diagnostic evidence rather than physical proof;
 - adversarial review is not `UNSUPPORTED CLAIM`;
 - adversarial review is not `OVERSTATED CLAIM`;
+- literature audit does not report unresolved core-evidence gaps;
 - the claim is consistent with the evidence package.
 
 Otherwise the result must be rejected, narrowed, or sent back for more evidence.
+
+Final gating decision is issued by `kansodata-chief-scientific-reviewer` and must remain traceable to specialist outputs.
 
 ## Fail-Closed Rules
 
@@ -196,6 +213,8 @@ Each reviewed result should include:
 - `kansodata-numerical-methods-auditor` verdict;
 - `kansodata-physical-validator` verdict;
 - `kansodata-advocatus-diaboli` verdict.
+- `kansodata-scientific-literature-auditor` verdict;
+- `kansodata-chief-scientific-reviewer` final decision.
 
 ## Example
 
