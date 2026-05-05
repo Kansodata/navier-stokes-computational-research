@@ -6,6 +6,7 @@ import numpy as np
 
 from navier_stokes_research.config import GridConfig, PhysicsConfig, TimeConfig
 from navier_stokes_research.solver.numerics import (
+    apply_dealias,
     assert_finite,
     build_wavenumbers,
     dealias_mask,
@@ -52,14 +53,17 @@ class NavierStokesSpectralSolver:
         assert_finite("streamfunction", streamfunction)
         return streamfunction
 
-    def velocity_from_vorticity(self, vorticity: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        psi = self.solve_streamfunction(vorticity)
-        psi_hat = np.fft.fft2(psi)
+    def _velocity_from_vorticity_hat(self, vorticity_hat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        psi_hat = -self.inv_laplacian * vorticity_hat
+        psi_hat[0, 0] = 0.0
         u = np.fft.ifft2(1j * self.ky[None, :] * psi_hat).real
         v = np.fft.ifft2(-1j * self.kx[:, None] * psi_hat).real
         assert_finite("velocity_u", u)
         assert_finite("velocity_v", v)
         return u, v
+
+    def velocity_from_vorticity(self, vorticity: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        return self._velocity_from_vorticity_hat(np.fft.fft2(vorticity))
 
     def compute_stability(self, vorticity: np.ndarray) -> StabilityState:
         u, v = self.velocity_from_vorticity(vorticity)
@@ -90,12 +94,15 @@ class NavierStokesSpectralSolver:
         return state
 
     def _rhs(self, vorticity: np.ndarray) -> np.ndarray:
-        u, v = self.velocity_from_vorticity(vorticity)
-        omega_hat = np.fft.fft2(vorticity)
-        omega_hat *= self.dealias
+        omega_hat = apply_dealias(np.fft.fft2(vorticity), self.dealias)
+        u, v = self._velocity_from_vorticity_hat(omega_hat)
         dwdx, dwdy = spectral_gradient(omega_hat, self.kx, self.ky)
         laplace_omega = np.fft.ifft2(self.laplacian * omega_hat).real
-        rhs = -(u * dwdx + v * dwdy) + self.physics.viscosity * laplace_omega
+        nonlinear = u * dwdx + v * dwdy
+        nonlinear_hat = apply_dealias(np.fft.fft2(nonlinear), self.dealias)
+        nonlinear_dealiased = np.fft.ifft2(nonlinear_hat).real
+        rhs = -nonlinear_dealiased + self.physics.viscosity * laplace_omega
+        assert_finite("nonlinear_dealiased", nonlinear_dealiased)
         assert_finite("rhs", rhs)
         return rhs
 
