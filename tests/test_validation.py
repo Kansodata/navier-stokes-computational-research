@@ -16,7 +16,7 @@ from navier_stokes_research.config import (
 )
 from navier_stokes_research.runner import run_simulation
 from navier_stokes_research.solver.numerics import assert_finite
-from navier_stokes_research.validation import evaluate_validation, load_metrics_csv
+from navier_stokes_research.validation import evaluate_validation, load_metrics_csv, write_validation_report
 
 
 def _small_config(output_dir: Path) -> SimulationConfig:
@@ -86,6 +86,29 @@ def test_validation_warns_on_non_finite_metrics() -> None:
     report = evaluate_validation(fake_metrics, config)
     assert report["status"] == "warn"
     assert "non_finite_metrics_detected" in report["warnings"]
+
+
+def test_validation_report_serializes_high_velocity_growth_check(tmp_path: Path) -> None:
+    fake_metrics = [
+        {"step": 0.0, "time": 0.0, "energy": 1.0, "enstrophy": 1.0, "max_velocity": 0.75, "cfl": 0.1},
+        {"step": 1.0, "time": 1.0, "energy": 0.99, "enstrophy": 0.98, "max_velocity": 0.76, "cfl": 0.1},
+    ]
+    config = SimulationConfig(
+        experiment_name="json_safe_validation",
+        grid=GridConfig(),
+        time=TimeConfig(),
+        physics=PhysicsConfig(),
+        initial_condition=InitialConditionConfig(),
+        output=OutputConfig(),
+    )
+
+    report = evaluate_validation(fake_metrics, config)
+    assert isinstance(report["checks"]["max_velocity_growth"]["ok"], bool)
+
+    report_path = tmp_path / "validation_report.json"
+    write_validation_report(report_path, report)
+    loaded = json.loads(report_path.read_text(encoding="utf-8"))
+    assert loaded["checks"]["max_velocity_growth"]["ok"] is True
 
 
 def test_assert_finite_fails_on_nan() -> None:
