@@ -17,6 +17,7 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - Provides a reproducible benchmark command and artifact set.
 - Provides a reproducible convergence study harness.
 - Provides Taylor-Green 2D analytical validation and multi-resolution error diagnostics.
+- Provides a controlled 2D stress validation harness.
 - Produces local static HTML reports in Spanish by default.
 - Writes automatic quality interpretation JSON files for benchmark and convergence runs.
 
@@ -146,6 +147,18 @@ This command runs a controlled 2D unforced viscous decay diagnostic and writes:
 
 It is a numerical/physical diagnostic for this bounded 2D setup and is not a formal proof or a 3D Navier-Stokes result. Spectral evidence is diagnostic only and is not a hard validation gate.
 
+## Run 2D stress validation
+
+```bash
+python -m navier_stokes_research.cli --stress-validation-2d
+```
+
+This command runs a controlled scenario matrix that attempts to stress the 2D solver without expanding scope to 3D. It writes:
+
+- `outputs/benchmarks/stress_validation_2d/stress_validation_summary.json`
+
+The harness records `passed`, `warning`, `failed`, and `expected_fail_closed` outcomes. Expected fail-closed CFL cases do not count as global failures when they fail for the configured expected reason. Spectral high-wavenumber evidence is diagnostic only and is not a hard gate.
+
 ## Spectral diagnostics
 
 The repository includes a pure internal API for 2D velocity spectral-energy diagnostics:
@@ -205,6 +218,7 @@ For Taylor-Green convergence outputs:
 - Fixed convergence-study default parameters in code (`32x32`, `64x64`) and fixed seed.
 - Fixed extended convergence-study parameters in code (`32x32`, `64x64`, `128x128`, `256x256`, `512x512`).
 - Fixed Taylor-Green convergence-study parameters in code (`32x32`, `64x64`, `128x128`, `256x256`).
+- Fixed stress-validation scenario matrix in code.
 - Convergence study uses a smooth deterministic vortex-pair initial condition for better comparability across resolutions.
 - Taylor-Green convergence study uses a controlled analytical 2D velocity solution.
 - Persisted `resolved_config.json` per run.
@@ -219,6 +233,7 @@ For Taylor-Green convergence outputs:
 - `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
 - `src/navier_stokes_research/convergence.py`: reproducible convergence-study harness.
 - `src/navier_stokes_research/taylor_green.py`: controlled Taylor-Green analytical validation and convergence harness.
+- `src/navier_stokes_research/stress_validation.py`: controlled 2D stress validation harness.
 - `src/navier_stokes_research/interpretation.py`: heuristic quality interpretation.
 - `src/navier_stokes_research/runner.py`: simulation orchestration.
 - `src/navier_stokes_research/cli.py`: terminal entrypoint.
@@ -234,6 +249,7 @@ For Taylor-Green convergence outputs:
 - Convergence harness is a baseline consistency study, not a formal convergence proof.
 - Quality thresholds are heuristic review aids, not mathematical criteria.
 - Taylor-Green validation is a controlled 2D case and does not prove global existence/smoothness for 3D Navier-Stokes.
+- Stress validation is an engineering robustness diagnostic, not a solver proof.
 - Near-floor error saturation in Taylor-Green convergence diagnostics indicates roundoff-limited behavior, not a standalone formal convergence proof.
 
 ## Future research roadmap
@@ -243,4 +259,4 @@ For Taylor-Green convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/external_validation_checklist_2d.md](docs/external_validation_checklist_2d.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), and [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/external_validation_checklist_2d.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), and [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
