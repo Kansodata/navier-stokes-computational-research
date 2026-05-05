@@ -158,6 +158,7 @@ This command runs a controlled scenario matrix that attempts to stress the 2D so
 - `outputs/benchmarks/stress_validation_2d/stress_validation_summary.json`
 
 The harness records `passed`, `warning`, `failed`, and `expected_fail_closed` outcomes. Expected fail-closed CFL cases do not count as global failures when they fail for the configured expected reason. Spectral high-wavenumber evidence is diagnostic only and is not a hard gate.
+External-reference 2D harness command: `python -m navier_stokes_research.cli --external-validation-2d`.
 
 ## Spectral diagnostics
 
