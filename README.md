@@ -182,6 +182,12 @@ The optional local index is written to:
 
 - `outputs/reports/index.html`
 
+## Scientific evidence and validation
+
+- [docs/literature_review.md](docs/literature_review.md)
+- [docs/validation_evidence_matrix.md](docs/validation_evidence_matrix.md)
+- [docs/references.bib](docs/references.bib)
+
 ## How to interpret metrics
 
 - `energy`: discrete kinetic energy proxy over grid cells.
