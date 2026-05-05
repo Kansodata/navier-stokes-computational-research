@@ -57,9 +57,10 @@ def evaluate_validation(
     energy_ratio = _trend_ratio(energy)
     enstrophy_ratio = _trend_ratio(enstrophy)
     max_velocity_growth = float(max_velocity[-1] - max_velocity[0])
+    max_velocity_growth_limit = float(max(1.0, 2.0 * float(max_velocity[0])))
     cfl_peak = float(np.max(cfl))
     cfl_margin_min = float(config.time.cfl_safety - cfl_peak)
-    diffusion_number = (
+    diffusion_number = float(
         config.physics.viscosity
         * config.time.dt
         * (
@@ -87,31 +88,31 @@ def evaluate_validation(
             "details": "All diagnostic time-series are finite.",
         },
         "kinetic_energy_trend": {
-            "ok": finite_ok and energy_ratio <= 1.10,
+            "ok": bool(finite_ok and energy_ratio <= 1.10),
             "start": float(energy[0]),
             "end": float(energy[-1]),
             "ratio": float(energy_ratio),
         },
         "enstrophy_trend": {
-            "ok": finite_ok and enstrophy_ratio <= 1.10,
+            "ok": bool(finite_ok and enstrophy_ratio <= 1.10),
             "start": float(enstrophy[0]),
             "end": float(enstrophy[-1]),
             "ratio": float(enstrophy_ratio),
         },
         "max_velocity_growth": {
-            "ok": finite_ok and max_velocity_growth <= max(1.0, 2.0 * max_velocity[0]),
+            "ok": bool(finite_ok and max_velocity_growth <= max_velocity_growth_limit),
             "start": float(max_velocity[0]),
             "end": float(max_velocity[-1]),
             "growth": max_velocity_growth,
         },
         "cfl_margin": {
-            "ok": cfl_margin_min > 0.0,
+            "ok": bool(cfl_margin_min > 0.0),
             "cfl_peak": cfl_peak,
             "cfl_limit": float(config.time.cfl_safety),
             "margin_min": cfl_margin_min,
         },
         "diffusion_margin": {
-            "ok": diffusion_margin > 0.0,
+            "ok": bool(diffusion_margin > 0.0),
             "diffusion_number": diffusion_number,
             "diffusion_limit": float(config.time.diffusion_safety),
             "margin": diffusion_margin,
@@ -124,7 +125,7 @@ def evaluate_validation(
             "max_residual": float(incompressibility_residual_max),
         }
 
-    status = "pass" if all(item["ok"] for item in checks.values()) else "warn"
+    status = "pass" if all(bool(item["ok"]) for item in checks.values()) else "warn"
     return {
         "status": status,
         "warnings": warnings,
