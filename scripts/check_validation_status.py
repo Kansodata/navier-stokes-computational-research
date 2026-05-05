@@ -175,12 +175,86 @@ def _check_time_refinement() -> None:
             _assert_finite_number(value, f"time_refinement.dt_levels[{idx}].{key}")
 
 
+def _check_multi_resolution_energy_enstrophy() -> None:
+    payload = _load_json(
+        ROOT
+        / "multi_resolution_energy_enstrophy_2d"
+        / "multi_resolution_energy_enstrophy_summary.json"
+    )
+    acceptance = _require_field(payload, "acceptance_statuses", "multi_resolution_energy_enstrophy")
+    if not isinstance(acceptance, dict):
+        raise RuntimeError("multi_resolution_energy_enstrophy.acceptance_statuses must be an object.")
+    _assert_status_not_failed(
+        _require_field(
+            acceptance,
+            "runtime_execution",
+            "multi_resolution_energy_enstrophy.acceptance_statuses",
+        ),
+        "multi_resolution_energy_enstrophy.runtime_execution",
+    )
+    _assert_status_not_failed(
+        _require_field(
+            acceptance,
+            "energy_enstrophy_regression_status",
+            "multi_resolution_energy_enstrophy.acceptance_statuses",
+        ),
+        "multi_resolution_energy_enstrophy.energy_enstrophy_regression_status",
+    )
+
+    resolutions = _require_field(payload, "resolutions", "multi_resolution_energy_enstrophy")
+    if not isinstance(resolutions, list) or not resolutions:
+        raise RuntimeError("multi_resolution_energy_enstrophy.resolutions must be a non-empty list.")
+
+    for idx, run in enumerate(resolutions):
+        if not isinstance(run, dict):
+            raise RuntimeError(f"multi_resolution_energy_enstrophy.resolutions[{idx}] must be an object.")
+        _assert_status_not_failed(
+            _require_field(run, "status", f"multi_resolution_energy_enstrophy.resolutions[{idx}]"),
+            f"multi_resolution_energy_enstrophy.resolutions[{idx}].status",
+        )
+        for key in (
+            "initial_energy",
+            "final_energy",
+            "initial_enstrophy",
+            "final_enstrophy",
+            "energy_ratio",
+            "enstrophy_ratio",
+            "cfl_peak",
+            "diffusion_margin",
+        ):
+            _assert_finite_number(
+                _require_field(
+                    run, key, f"multi_resolution_energy_enstrophy.resolutions[{idx}]"
+                ),
+                f"multi_resolution_energy_enstrophy.resolutions[{idx}].{key}",
+            )
+
+    summary = _require_field(payload, "summary", "multi_resolution_energy_enstrophy")
+    if not isinstance(summary, dict):
+        raise RuntimeError("multi_resolution_energy_enstrophy.summary must be an object.")
+    unexpected = _require_field(
+        summary,
+        "unexpected_failures",
+        "multi_resolution_energy_enstrophy.summary",
+    )
+    if not isinstance(unexpected, list):
+        raise RuntimeError(
+            "multi_resolution_energy_enstrophy.summary.unexpected_failures must be a list."
+        )
+    if unexpected:
+        raise RuntimeError(
+            "multi_resolution_energy_enstrophy.summary.unexpected_failures must be empty, "
+            f"got: {unexpected}"
+        )
+
+
 def main() -> None:
     _check_taylor_green()
     _check_taylor_green_convergence()
     _check_physical_decay()
     _check_stress_validation()
     _check_time_refinement()
+    _check_multi_resolution_energy_enstrophy()
     print("Validation artifact status check passed.")
 
 
