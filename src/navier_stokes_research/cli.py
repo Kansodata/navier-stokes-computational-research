@@ -9,6 +9,7 @@ from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.stress_validation import run_stress_validation_2d
 from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
 
 
@@ -79,6 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run controlled 2D unforced viscous decay validation and write physical_decay_validation.json.",
     )
+    parser.add_argument(
+        "--stress-validation-2d",
+        action="store_true",
+        help="Run controlled 2D stress validation and write stress_validation_summary.json.",
+    )
     return parser
 
 
@@ -112,9 +118,14 @@ def main() -> None:
         run_physical_decay_validation(base_output_dir=args.benchmark_output_dir)
         return
 
+    if args.stress_validation_2d:
+        configure_logging("INFO")
+        run_stress_validation_2d(base_output_dir=args.benchmark_output_dir)
+        return
+
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, or --physical-decay-validation is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, or --stress-validation-2d is used."
         )
 
     config = load_config(args.config)
