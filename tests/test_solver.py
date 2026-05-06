@@ -223,3 +223,59 @@ def test_deterministic_fourier_forcing_fails_closed_for_empty_active_band() -> N
             time=TimeConfig(dt=0.001, steps=1),
             forcing=forcing,
         )
+
+
+def test_ou_fourier_forcing_reproducibly_evolves_once_per_step() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_ou_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        seed=123,
+        target_energy_input_rate=0.01,
+        ou_correlation_time=0.5,
+        ou_noise_amplitude=1.0,
+    )
+    grid = GridConfig(nx=32, ny=32)
+    physics = PhysicsConfig(viscosity=0.0)
+    time = TimeConfig(dt=0.001, steps=2)
+    solver_a = NavierStokesSpectralSolver(grid=grid, physics=physics, time=time, forcing=forcing)
+    solver_b = NavierStokesSpectralSolver(grid=grid, physics=physics, time=time, forcing=forcing)
+    vorticity_a = np.zeros((32, 32))
+    vorticity_b = np.zeros((32, 32))
+    initial_forcing = solver_a.forcing_field.copy()
+
+    vorticity_a, _ = solver_a.step(vorticity_a)
+    vorticity_b, _ = solver_b.step(vorticity_b)
+
+    assert np.allclose(solver_a.forcing_field, solver_b.forcing_field)
+    assert not np.allclose(solver_a.forcing_field, initial_forcing)
+    assert float(np.mean(solver_a.forcing_field)) == pytest.approx(0.0, abs=1e-15)
+    assert np.all(np.isfinite(solver_a.forcing_field))
+
+
+def test_ou_fourier_forcing_remains_band_limited_after_state_update() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_ou_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        seed=321,
+        target_energy_input_rate=0.01,
+        ou_correlation_time=0.5,
+        ou_noise_amplitude=1.0,
+    )
+    solver = NavierStokesSpectralSolver(
+        grid=GridConfig(nx=32, ny=32),
+        physics=PhysicsConfig(viscosity=0.0),
+        time=TimeConfig(dt=0.001, steps=2),
+        forcing=forcing,
+    )
+    vorticity = np.zeros((32, 32))
+
+    solver.step(vorticity)
+    forcing_hat = np.fft.fft2(solver.forcing_field)
+    outside_active_band = ~solver.forcing_mask
+
+    assert np.count_nonzero(solver.forcing_mask) > 0
+    assert np.allclose(forcing_hat[outside_active_band], 0.0, atol=1e-10)
