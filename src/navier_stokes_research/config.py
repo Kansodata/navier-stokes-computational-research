@@ -31,9 +31,8 @@ class PhysicsConfig:
 class ForcingConfig:
     """Configuration for controlled 2D forcing experiments.
 
-    Defaults preserve exact unforced baseline semantics. Phase 3 permits only
-    deterministic narrow-band Fourier forcing. Stochastic OU forcing remains
-    blocked until its dedicated implementation and validation phase.
+    Defaults preserve exact unforced baseline semantics. Deterministic and
+    Ornstein-Uhlenbeck narrow-band Fourier forcing are opt-in only.
     """
 
     enabled: bool = False
@@ -54,8 +53,6 @@ class ForcingConfig:
             raise ValueError("Disabled forcing config must use forcing_type='none'.")
         if self.enabled and self.forcing_type == "none":
             raise ValueError("Enabled forcing config must use an implemented forcing_type.")
-        if self.enabled and self.forcing_type == "fourier_ou_narrow_band":
-            raise ValueError("Ornstein-Uhlenbeck forcing is not implemented yet.")
         if self.k_min < 0.0:
             raise ValueError("forcing.k_min must be non-negative")
         if self.k_max < 0.0:
@@ -68,6 +65,8 @@ class ForcingConfig:
             raise ValueError("forcing.ou_correlation_time must be positive")
         if self.ou_noise_amplitude < 0.0:
             raise ValueError("forcing.ou_noise_amplitude must be non-negative")
+        if self.enabled and self.forcing_type == "fourier_ou_narrow_band" and self.ou_noise_amplitude <= 0.0:
+            raise ValueError("OU forcing requires ou_noise_amplitude > 0")
         if self.target_energy_input_rate < 0.0:
             raise ValueError("forcing.target_energy_input_rate must be non-negative")
         if self.enabled and self.target_energy_input_rate <= 0.0:
