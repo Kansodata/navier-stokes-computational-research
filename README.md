@@ -172,6 +172,14 @@ The repository includes a pure internal API for 2D velocity spectral-energy diag
 
 This iteration does not add a CLI command for spectral diagnostics. The module is intended as numerical evidence support and not as a formal proof mechanism.
 
+## Controlled forcing design gate
+
+The planned controlled-forcing expansion is documented in:
+
+- [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md)
+
+This is a design and V&V gate only. It does not implement forcing, does not validate stationary turbulence, and does not expand the repository beyond controlled 2D periodic experiments.
+
 ## Local static visual reports
 
 Reports are local static HTML files with embedded CSS and no external dependencies. They are generated in Spanish by default and can be opened directly from the filesystem:
@@ -270,4 +278,4 @@ For Taylor-Green convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/external_validation_checklist_2d.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/external_validation_checklist_2d.md), [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
