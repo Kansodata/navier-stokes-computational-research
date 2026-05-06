@@ -1,22 +1,27 @@
 cff-version: 1.2.0
-title: "navier-stokes-computational-research"
 message: "If you use this software, please cite it using the metadata from this file."
+title: "navier-stokes-computational-research"
 type: software
 authors:
   - family-names: "Contreras Fuentes"
     given-names: "Marcos"
     orcid: "https://orcid.org/0000-0002-1858-1611"
-abstract: "Research-oriented Python software for deterministic 2D incompressible Navier-Stokes simulations on periodic domains. The project supports reproducible numerical experiments, pseudo-spectral vorticity-streamfunction simulations, validation reports, Taylor-Green 2D validation, convergence-study artifacts, diagnostic metrics and local static HTML reports. This software is a computational research baseline and does not claim to solve the 3D Navier-Stokes Millennium Prize problem."
+    affiliation: "Kansodata"
+repository-code: "https://github.com/Kansodata/navier-stokes-computational-research"
+abstract: "Research-oriented Python framework for auditable 2D incompressible periodic Navier-Stokes simulations, pseudo-spectral validation, controlled forcing diagnostics, and reproducible scientific evidence artifacts. This software is a computational research baseline and does not claim to solve the 3D Navier-Stokes Millennium Prize problem."
 keywords:
   - Navier-Stokes
-  - computational fluid dynamics
-  - numerical methods
-  - scientific computing
-  - reproducibility
-  - Taylor-Green vortex
-  - Python
-license: "MIT"
-repository-code: "https://github.com/Kansodata/navier-stokes-computational-research"
+  - Computational Fluid Dynamics
+  - CFD
+  - Numerical Methods
+  - Scientific Computing
+  - Reproducibility
+  - Pseudo-spectral Methods
+  - Taylor-Green Vortex
+  - Validation
+  - Benchmarking
+  - Data Engineering
+  - Artificial Intelligence
+license: GPL-3.0-only
 version: "0.1.0"
 date-released: "2026-04-01"
-
