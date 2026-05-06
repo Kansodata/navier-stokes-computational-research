@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from navier_stokes_research.config import GridConfig, PhysicsConfig, TimeConfig
+from navier_stokes_research.config import ForcingConfig, GridConfig, PhysicsConfig, TimeConfig
 from navier_stokes_research.solver.numerics import (
     apply_dealias,
     assert_finite,
@@ -30,10 +30,12 @@ class NavierStokesSpectralSolver:
         grid: GridConfig,
         physics: PhysicsConfig,
         time: TimeConfig,
+        forcing: ForcingConfig | None = None,
     ) -> None:
         self.grid = grid
         self.physics = physics
         self.time = time
+        self.forcing = forcing or ForcingConfig()
 
         self.dx = grid.lx / grid.nx
         self.dy = grid.ly / grid.ny
@@ -95,14 +97,18 @@ class NavierStokesSpectralSolver:
 
     def _rhs(self, vorticity: np.ndarray) -> np.ndarray:
         omega_hat = apply_dealias(np.fft.fft2(vorticity), self.dealias)
+        omega_dealiased = np.fft.ifft2(omega_hat).real
         u, v = self._velocity_from_vorticity_hat(omega_hat)
         dwdx, dwdy = spectral_gradient(omega_hat, self.kx, self.ky)
         laplace_omega = np.fft.ifft2(self.laplacian * omega_hat).real
         nonlinear = u * dwdx + v * dwdy
         nonlinear_hat = apply_dealias(np.fft.fft2(nonlinear), self.dealias)
         nonlinear_dealiased = np.fft.ifft2(nonlinear_hat).real
-        rhs = -nonlinear_dealiased + self.physics.viscosity * laplace_omega
+        ekman_drag = -self.forcing.ekman_drag * omega_dealiased
+        rhs = -nonlinear_dealiased + self.physics.viscosity * laplace_omega + ekman_drag
+        assert_finite("omega_dealiased", omega_dealiased)
         assert_finite("nonlinear_dealiased", nonlinear_dealiased)
+        assert_finite("ekman_drag", ekman_drag)
         assert_finite("rhs", rhs)
         return rhs
 
