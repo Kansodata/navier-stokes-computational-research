@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import json
+import inspect
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 from navier_stokes_research.cli import build_parser
 from navier_stokes_research.scientific_report import (
     ArtifactSpec,
     _humanize_discrepancy,
+    _select_generated_figure_paths,
+    _short_path_label,
+    _short_validation_name,
     generate_scientific_validation_pdf,
     generate_scientific_validation_report,
 )
@@ -308,3 +314,84 @@ def test_scientific_report_discrepancy_text_is_human_readable_not_raw_json() -> 
     assert "{" not in joined
     assert "}" not in joined
     assert "json" not in joined.lower()
+
+
+def test_short_helpers_produce_legible_labels() -> None:
+    assert _short_validation_name("multi_resolution_energy_enstrophy_2d") == "Multi-Res E/E 2D"
+    path = "C:/repo/outputs/benchmarks/taylor_green_2d/taylor_green_validation.json"
+    assert _short_path_label(path).startswith("outputs/")
+
+
+def test_pdf_generator_source_avoids_console_table_string() -> None:
+    source = inspect.getsource(generate_scientific_validation_pdf)
+    assert "validation_id | type | status | schema | path" not in source
+
+
+def test_select_generated_figure_paths_reads_manifest(tmp_path: Path) -> None:
+    figures_dir = tmp_path / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    image_path = figures_dir / "figure_1.png"
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.plot([0, 1], [0, 1])
+    fig.savefig(image_path)
+    plt.close(fig)
+
+    manifest_path = figures_dir / "figures_manifest.json"
+    manifest = {
+        "figures": [
+            {"figure_id": "f1", "status": "generated", "path": str(image_path)},
+            {"figure_id": "f2", "status": "skipped", "path": str(figures_dir / "missing.png")},
+        ]
+    }
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    selected = _select_generated_figure_paths(str(manifest_path))
+    assert selected
+    assert selected[0] == image_path
+
+
+def test_scientific_report_pdf_with_generated_figures_manifest(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    figures_dir = tmp_path / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    artifact = build_validation_result(
+        validation_id="unit_pdf_fig_case",
+        validation_type="diagnostic",
+        status="passed",
+        claim_scope="diagnostic_only",
+    )
+    artifact_path = base / "unit" / "artifact.json"
+    _write_json(artifact_path, artifact)
+    image_path = figures_dir / "figure_1.png"
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.plot([0, 1], [1, 0])
+    fig.savefig(image_path)
+    plt.close(fig)
+    manifest = {
+        "figures": [
+            {"figure_id": "f1", "status": "generated", "path": str(image_path)},
+        ]
+    }
+    manifest_path = figures_dir / "figures_manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        figures_manifest_path=str(manifest_path),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="unit_pdf_fig_case",
+                validation_type="diagnostic",
+                path=artifact_path,
+                critical=True,
+            )
+        ],
+    )
+    pdf_path = out / "scientific_validation_report.pdf"
+    generated = generate_scientific_validation_pdf(
+        report_json_path=str(report["report_json_path"]),
+        output_pdf_path=str(pdf_path),
+    )
+    assert generated.exists()
+    assert generated.stat().st_size > 0

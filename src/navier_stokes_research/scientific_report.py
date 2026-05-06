@@ -791,59 +791,273 @@ def _abbreviate_path(path: str, max_length: int = 60) -> str:
     return "..." + path[-(max_length - 3):]
 
 
-def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]]) -> None:
-    fig, ax = plt.subplots(figsize=(11.69, 8.27))
-    ax.axis("off")
-    fig.text(0.05, 0.95, "Validation and Artifact Matrix", fontsize=16, fontweight="bold", color="#0F172A")
+def _short_validation_name(validation_id: str) -> str:
+    alias_map = {
+        "taylor_green_2d": "Taylor-Green 2D",
+        "taylor_green_convergence_2d": "Taylor-Green Conv.",
+        "physical_decay_2d": "Physical Decay 2D",
+        "stress_validation_2d": "Stress Validation 2D",
+        "time_refinement_2d": "Time Refinement 2D",
+        "multi_resolution_energy_enstrophy_2d": "Multi-Res E/E 2D",
+        "forced_turbulence_validation_2d": "Forced Turbulence 2D",
+        "resolution_sensitivity_2d": "Resolution Sensitivity 2D",
+        "hpc_fftw_benchmark": "HPC FFTW Benchmark",
+    }
+    if validation_id in alias_map:
+        return alias_map[validation_id]
+    return validation_id.replace("_", " ").title()[:36]
+
+
+def _short_path_label(path: str) -> str:
+    normalized = path.replace("\\", "/")
+    if "outputs/" in normalized:
+        return normalized[normalized.index("outputs/") :]
+    return _abbreviate_path(normalized, max_length=50)
+
+
+def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]], rows_per_page: int = 14) -> None:
     rows = []
     for item in items:
+        status = str(item.get("status", "unknown"))
+        schema = str(item.get("schema", "unknown"))
+        if schema in {"missing", "invalid", "1.0_invalid"} and status != "failed":
+            status = "missing"
         rows.append(
             [
-                str(item.get("validation_id", "unknown")),
-                str(item.get("validation_type", "unknown")),
-                str(item.get("status", "unknown")),
-                str(item.get("schema", "unknown")),
-                "yes" if bool(item.get("critical", False)) else "no",
-                _abbreviate_path(str(item.get("path", "unknown"))),
+                _short_validation_name(str(item.get("validation_id", "unknown"))),
+                status.upper(),
+                str(item.get("validation_type", "unknown")).title(),
+                "Yes" if bool(item.get("critical", False)) else "No",
+                schema,
             ]
         )
     if not rows:
-        rows = [["no_artifacts", "-", "-", "-", "-", "-"]]
+        rows = [["No artifacts", "-", "-", "-", "-"]]
 
-    table = ax.table(
-        cellText=rows,
-        colLabels=["Validation", "Type", "Status", "Schema", "Critical", "Artifact path"],
-        cellLoc="left",
-        colLoc="left",
-        loc="center",
-        colWidths=[0.22, 0.12, 0.12, 0.10, 0.10, 0.34],
+    chunks = [rows[i : i + rows_per_page] for i in range(0, len(rows), rows_per_page)]
+    for page_idx, chunk in enumerate(chunks, start=1):
+        fig, ax = plt.subplots(figsize=(11.69, 8.27))
+        ax.axis("off")
+        fig.text(
+            0.05,
+            0.95,
+            f"Validation Matrix (page {page_idx}/{len(chunks)})",
+            fontsize=16,
+            fontweight="bold",
+            color="#0F172A",
+        )
+        table = ax.table(
+            cellText=chunk,
+            colLabels=["Validation", "Status", "Evidence type", "Critical", "Schema"],
+            cellLoc="left",
+            colLoc="left",
+            loc="center",
+            bbox=[0.04, 0.08, 0.92, 0.82],
+            colWidths=[0.36, 0.14, 0.20, 0.12, 0.18],
+        )
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1.0, 1.35)
+        for col in range(5):
+            header_cell = table[(0, col)]
+            header_cell.set_facecolor("#E2E8F0")
+            header_cell.set_text_props(weight="bold", color="#0F172A")
+            header_cell.set_edgecolor("#CBD5E1")
+        for idx, row in enumerate(chunk, start=1):
+            bg, fg = _status_palette(row[1].lower())
+            for col in range(5):
+                cell = table[(idx, col)]
+                cell.set_edgecolor("#E2E8F0")
+                cell.PAD = 0.02
+                if col == 1:
+                    cell.set_facecolor(bg)
+                    cell.get_text().set_color(fg)
+                    cell.get_text().set_weight("bold")
+                else:
+                    cell.set_facecolor("#FFFFFF")
+        fig.text(
+            0.05,
+            0.03,
+            "Full artifact routes are listed in the final Artifact Index section.",
+            fontsize=9,
+            color="#475569",
+        )
+        pdf.savefig(fig, bbox_inches="tight")
+        plt.close(fig)
+
+
+def _draw_scientific_interpretation_page(
+    pdf: PdfPages,
+    *,
+    summary: dict[str, Any],
+    human_review_required: list[str],
+) -> None:
+    passed = int(summary.get("passed", 0))
+    warning = int(summary.get("warning", 0))
+    failed = int(summary.get("failed", 0))
+    missing_invalid = int(summary.get("missing", 0)) + int(summary.get("invalid", 0))
+    interpretation_lines = [
+        "Scientific Interpretation",
+        "",
+        f"Strong evidence: {passed} artifacts are in passed status under controlled 2D periodic scope.",
+        f"Warnings: {warning} artifacts require conservative interpretation and targeted follow-up review.",
+        f"Failures: {failed} artifacts indicate non-acceptable evidence for unconditional acceptance.",
+        f"Missing/invalid: {missing_invalid} artifacts reduce traceability and must be addressed before stronger claims.",
+        "",
+        "Meaning of human_review_required:",
+        "The evidence supports structured review but does not imply automatic scientific acceptance.",
+        "",
+        "What cannot be claimed:",
+        "- No 3D Navier-Stokes solution claim.",
+        "- No Millennium Problem claim.",
+        "- No mathematical proof claim.",
+        "- No broad physical generalization beyond validated scenarios.",
+    ]
+    if human_review_required:
+        interpretation_lines.append("")
+        interpretation_lines.append("Artifacts explicitly marked as human_review_required:")
+        interpretation_lines.extend(f"- {_short_validation_name(item)}" for item in human_review_required[:10])
+    _text_page(
+        pdf,
+        "Scientific Interpretation",
+        interpretation_lines,
+        fontsize=10.5,
+        wrap_width=102,
     )
-    table.auto_set_font_size(False)
-    table.set_fontsize(8.5)
-    table.scale(1.0, 1.35)
 
-    for col in range(6):
-        header_cell = table[(0, col)]
-        header_cell.set_facecolor("#E2E8F0")
-        header_cell.set_text_props(weight="bold", color="#0F172A")
-        header_cell.set_edgecolor("#CBD5E1")
 
-    for idx, row in enumerate(rows, start=1):
-        status = row[2]
-        bg, fg = _status_palette(status)
-        for col in range(6):
-            cell = table[(idx, col)]
-            cell.set_edgecolor("#E2E8F0")
-            if col == 2:
-                cell.set_facecolor(bg)
-                cell.get_text().set_color(fg)
-                cell.get_text().set_weight("bold")
-            elif col in {0, 5}:
-                cell.set_facecolor("#FAFAFA")
-            else:
-                cell.set_facecolor("#FFFFFF")
-    pdf.savefig(fig, bbox_inches="tight")
-    plt.close(fig)
+def _draw_warning_cards(pdf: PdfPages, discrepancy: list[dict[str, Any]]) -> None:
+    if not discrepancy:
+        _text_page(
+            pdf,
+            "Warnings and Gaps",
+            ["No warning-status discrepancy analysis entries were produced."],
+            fontsize=10.5,
+            wrap_width=100,
+        )
+        return
+
+    cards_per_page = 3
+    chunks = [discrepancy[i : i + cards_per_page] for i in range(0, len(discrepancy), cards_per_page)]
+    for page_idx, chunk in enumerate(chunks, start=1):
+        fig, ax = plt.subplots(figsize=(8.27, 11.69))
+        ax.axis("off")
+        fig.text(0.07, 0.96, f"Warnings and Gaps (page {page_idx}/{len(chunks)})", fontsize=15, fontweight="bold")
+        top = 0.88
+        for item in chunk:
+            card = plt.Rectangle((0.06, top - 0.24), 0.88, 0.22, transform=fig.transFigure, color="#FFFDF5", ec="#E2E8F0")
+            fig.patches.append(card)
+            validation_label = _short_validation_name(str(item.get("validation_id", "unknown")))
+            warning_tokens = item.get("warning_tokens", [])
+            likely_causes = item.get("likely_causes", [])
+            recommended_actions = item.get("recommended_actions", [])
+            fig.text(0.08, top - 0.04, validation_label, fontsize=11, fontweight="bold", color="#0F172A")
+            fig.text(
+                0.08,
+                top - 0.08,
+                "Warning: " + (", ".join(str(token) for token in warning_tokens) if warning_tokens else "human review required"),
+                fontsize=9.5,
+                color="#334155",
+            )
+            fig.text(
+                0.08,
+                top - 0.12,
+                "Likely cause: "
+                + ("; ".join(str(token).replace("_", " ") for token in likely_causes[:2]) if likely_causes else "insufficient constrained evidence"),
+                fontsize=9.5,
+                color="#334155",
+            )
+            fig.text(
+                0.08,
+                top - 0.16,
+                "Recommended action: "
+                + ("; ".join(str(token).replace("_", " ") for token in recommended_actions[:2]) if recommended_actions else "review artifacts and rerun targeted diagnostics"),
+                fontsize=9.5,
+                color="#334155",
+            )
+            fig.text(
+                0.08,
+                top - 0.20,
+                "Claim boundary: does not establish formal convergence or general turbulence validity.",
+                fontsize=9.5,
+                color="#475569",
+            )
+            top -= 0.28
+        pdf.savefig(fig, bbox_inches="tight")
+        plt.close(fig)
+
+
+def _draw_figures_pages(pdf: PdfPages, figure_paths: list[Path]) -> None:
+    if not figure_paths:
+        _text_page(
+            pdf,
+            "Validation Figures",
+            ["No generated figures available."],
+            fontsize=10.5,
+            wrap_width=100,
+        )
+        return
+    for idx, figure_path in enumerate(figure_paths[:3], start=1):
+        fig, ax = plt.subplots(figsize=(11.69, 8.27))
+        ax.axis("off")
+        fig.text(0.05, 0.95, f"Validation Figure {idx}", fontsize=15, fontweight="bold")
+        fig.text(0.05, 0.92, _short_path_label(str(figure_path)), fontsize=9.5, color="#475569")
+        try:
+            image = plt.imread(figure_path)
+            ax.imshow(image)
+            ax.set_position([0.05, 0.08, 0.9, 0.80])
+            ax.axis("off")
+        except Exception:
+            fig.text(0.05, 0.86, "Figure could not be rendered; path listed in Artifact Index.", fontsize=10, color="#B45309")
+        pdf.savefig(fig, bbox_inches="tight")
+        plt.close(fig)
+
+
+def _select_generated_figure_paths(figures_manifest_path: str, max_figures: int = 3) -> list[Path]:
+    manifest_path = Path(figures_manifest_path)
+    if not manifest_path.exists():
+        return []
+    payload = _load_json(manifest_path)
+    figures = payload.get("figures", [])
+    if not isinstance(figures, list):
+        return []
+    selected: list[Path] = []
+    for figure in figures:
+        if not isinstance(figure, dict):
+            continue
+        if str(figure.get("status", "")).lower() != "generated":
+            continue
+        path_value = figure.get("path")
+        if not isinstance(path_value, str):
+            continue
+        figure_path = Path(path_value)
+        if figure_path.exists():
+            selected.append(figure_path)
+        if len(selected) >= max_figures:
+            break
+    return selected
+
+
+def _draw_artifact_index_page(
+    pdf: PdfPages,
+    *,
+    report_json_path: str,
+    markdown_report_path: str,
+    figures_manifest_path: str,
+    items: list[dict[str, Any]],
+) -> None:
+    lines = [
+        "Artifact Index",
+        "",
+        f"JSON report: {report_json_path}",
+        f"Markdown report: {markdown_report_path}",
+        f"Figures manifest: {figures_manifest_path}",
+        "",
+        "Validation artifact routes:",
+    ]
+    for item in items:
+        lines.append(f"- {str(item.get('validation_id', 'unknown'))}: {str(item.get('path', 'unknown'))}")
+    _text_page(pdf, "Artifact Index", lines, fontsize=8.8, wrap_width=115)
 
 
 def generate_scientific_validation_pdf(
@@ -865,7 +1079,6 @@ def generate_scientific_validation_pdf(
     figures = payload.get("figures", {})
     discrepancy = payload.get("discrepancy_analysis", [])
     limitations = payload.get("scientific_limitations", [])
-    evidence = payload.get("evidence_summary", [])
     claim_policy = payload.get("claim_policy", {})
 
     output_path = Path(output_pdf_path)
@@ -877,12 +1090,14 @@ def generate_scientific_validation_pdf(
         if isinstance(rows, list):
             all_items.extend([row for row in rows if isinstance(row, dict)])
 
-    table_lines = _table_lines(all_items) if all_items else ["No artifacts found."]
+    markdown_report_path = str(payload.get("artifacts", {}).get("markdown_report", "unknown"))
+    figures_manifest_path = str(figures.get("manifest", "outputs/figures/figures_manifest.json"))
     artifact_refs = [
         f"JSON report: {report_json_path}",
-        f"Markdown report: {str(payload.get('artifacts', {}).get('markdown_report', 'unknown'))}",
-        f"Figures manifest: {str(figures.get('manifest', 'unknown'))}",
+        f"Markdown report: {markdown_report_path}",
+        f"Figures manifest: {figures_manifest_path}",
     ]
+    selected_figures = _select_generated_figure_paths(figures_manifest_path=figures_manifest_path, max_figures=3)
 
     with PdfPages(output_path) as pdf:
         _draw_cover_page(
@@ -893,36 +1108,16 @@ def generate_scientific_validation_pdf(
         )
         _draw_summary_cards(pdf, summary if isinstance(summary, dict) else {}, overall_status)
         _draw_validation_table(pdf, all_items)
-        _text_page(
+        _draw_scientific_interpretation_page(
             pdf,
-            "Conservative Interpretive Analysis",
-            [
-                "This report consolidates deterministic 2D periodic validation artifacts.",
-                "Interpretation is conservative: warnings and diagnostics are not upgraded to formal claims.",
-                "Low numerical error or smooth behavior does not imply broad physical validity.",
-                "Any failed critical artifact blocks acceptance under fail-closed policy.",
-                "",
-                "Evidence summary",
-                *([str(item) for item in evidence] if isinstance(evidence, list) and evidence else ["No evidence summary entries available."]),
-                "",
-                "Validation table index (compact)",
-                *table_lines[:8],
-            ],
-            fontsize=10,
-            wrap_width=102,
+            summary=summary if isinstance(summary, dict) else {},
+            human_review_required=payload.get("human_review_required", []) if isinstance(payload.get("human_review_required", []), list) else [],
         )
-        warnings_lines: list[str] = []
-        if isinstance(discrepancy, list) and discrepancy:
-            warnings_lines.append("Warning and gap review by validation:")
-            warnings_lines.append("")
-            for item in discrepancy:
-                if not isinstance(item, dict):
-                    continue
-                warnings_lines.extend(f"- {line}" for line in _humanize_discrepancy(item))
-                warnings_lines.append("")
-        else:
-            warnings_lines.append("No warning-status discrepancy analysis entries were produced.")
-        _text_page(pdf, "Warnings and Gaps", warnings_lines, fontsize=10, wrap_width=102)
+        _draw_warning_cards(
+            pdf,
+            discrepancy=[item for item in discrepancy if isinstance(item, dict)] if isinstance(discrepancy, list) else [],
+        )
+        _draw_figures_pages(pdf, selected_figures)
 
         limitations_lines = [
             "Explicit limits",
@@ -941,8 +1136,19 @@ def generate_scientific_validation_pdf(
             "Scientific limitation tokens",
             *([f"- {str(item)}" for item in limitations] if isinstance(limitations, list) and limitations else ["- none"]),
             "",
-            "Artifact routes",
-            *[f"- {line}" for line in artifact_refs],
+            "Interpretive notes",
+            "The report is evidence-first and fail-closed for critical failures.",
+            "Warnings and diagnostic evidence require conservative scientific reading.",
+            "",
+            "Reference routes summary",
+            *[f"- {line}" for line in artifact_refs[:3]],
         ]
         _text_page(pdf, "Limits and Artifact Routes", limitations_lines, fontsize=10, wrap_width=102)
+        _draw_artifact_index_page(
+            pdf,
+            report_json_path=report_json_path,
+            markdown_report_path=markdown_report_path,
+            figures_manifest_path=figures_manifest_path,
+            items=all_items,
+        )
     return output_path
