@@ -46,6 +46,40 @@ class NavierStokesSpectralSolver:
         mask = self.laplacian != 0.0
         self.inv_laplacian[mask] = 1.0 / self.laplacian[mask]
         self.dealias = dealias_mask(grid.nx, grid.ny)
+        self.forcing_mask = self._build_forcing_mask()
+        self.forcing_field = self._build_deterministic_forcing_field()
+
+    def _build_forcing_mask(self) -> np.ndarray:
+        wavenumber_radius = np.sqrt(self.kx[:, None] ** 2 + self.ky[None, :] ** 2)
+        mask = (
+            (wavenumber_radius >= self.forcing.k_min)
+            & (wavenumber_radius <= self.forcing.k_max)
+            & (wavenumber_radius > 0.0)
+        )
+        return mask & self.dealias
+
+    def _build_deterministic_forcing_field(self) -> np.ndarray:
+        if not self.forcing.enabled:
+            return np.zeros((self.grid.nx, self.grid.ny), dtype=float)
+        if self.forcing.forcing_type != "fourier_deterministic_narrow_band":
+            raise ValueError(f"Unsupported runtime forcing_type: {self.forcing.forcing_type}")
+        active_modes = int(np.count_nonzero(self.forcing_mask))
+        if active_modes == 0:
+            raise ValueError("Deterministic Fourier forcing band contains no active de-aliased modes")
+
+        rng = np.random.default_rng(self.forcing.seed)
+        raw = rng.normal(size=(self.grid.nx, self.grid.ny))
+        forcing_hat = np.fft.fft2(raw)
+        forcing_hat = apply_dealias(forcing_hat * self.forcing_mask, self.dealias)
+        forcing_hat[0, 0] = 0.0
+        forcing = np.fft.ifft2(forcing_hat).real
+        forcing -= float(np.mean(forcing))
+        rms = float(np.sqrt(np.mean(forcing**2)))
+        if not np.isfinite(rms) or rms <= 0.0:
+            raise ValueError("Deterministic Fourier forcing generated zero or non-finite RMS")
+        forcing *= self.forcing.target_energy_input_rate / rms
+        assert_finite("deterministic_forcing", forcing)
+        return forcing
 
     def solve_streamfunction(self, vorticity: np.ndarray) -> np.ndarray:
         vorticity_hat = np.fft.fft2(vorticity)
@@ -105,10 +139,16 @@ class NavierStokesSpectralSolver:
         nonlinear_hat = apply_dealias(np.fft.fft2(nonlinear), self.dealias)
         nonlinear_dealiased = np.fft.ifft2(nonlinear_hat).real
         ekman_drag = -self.forcing.ekman_drag * omega_dealiased
-        rhs = -nonlinear_dealiased + self.physics.viscosity * laplace_omega + ekman_drag
+        rhs = (
+            -nonlinear_dealiased
+            + self.physics.viscosity * laplace_omega
+            + ekman_drag
+            + self.forcing_field
+        )
         assert_finite("omega_dealiased", omega_dealiased)
         assert_finite("nonlinear_dealiased", nonlinear_dealiased)
         assert_finite("ekman_drag", ekman_drag)
+        assert_finite("forcing_field", self.forcing_field)
         assert_finite("rhs", rhs)
         return rhs
 
