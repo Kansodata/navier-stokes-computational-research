@@ -14,11 +14,18 @@ This pipeline does not modify the solver. It defines the review process used to 
 
 The current validation agents are:
 
+- `kansodata-reproducibility-and-ci-auditor`
 - `kansodata-numerical-methods-auditor`
 - `kansodata-physical-validator`
 - `kansodata-advocatus-diaboli`
 - `kansodata-scientific-literature-auditor`
 - `kansodata-chief-scientific-reviewer` (primus inter pares coordinator)
+
+### `kansodata-reproducibility-and-ci-auditor`
+
+Evaluates reproducibility and CI-alignment evidence: executable commands, deterministic seeds/configuration, artifact-path consistency, fail-closed status checks, and output traceability.
+
+It does not replace numerical-method review, physical validation, adversarial claim review, documentation-scientific writing, or final merge-gate coordination by primus inter pares.
 
 ### `kansodata-numerical-methods-auditor`
 
@@ -67,7 +74,31 @@ Collect the minimum evidence package:
 
 The run must not proceed to scientific acceptance if the minimum evidence package is missing.
 
-### Step 2: Numerical-method audit
+### Step 2: Reproducibility and CI audit
+
+Agent:
+
+- `kansodata-reproducibility-and-ci-auditor`
+
+Required inputs:
+
+- git commit or branch under review;
+- exact local commands executed;
+- resolved configuration and seed metadata;
+- expected and generated artifact paths;
+- fail-closed checker result;
+- CI-required checks context when available.
+
+Possible outputs:
+
+- `REPRODUCIBLE_AND_CI_ALIGNED`
+- `REPRODUCIBLE_WITH_GAPS`
+- `NOT_REPRODUCIBLE`
+- `INSUFFICIENT REPRODUCIBILITY EVIDENCE`
+
+Reproducibility/CI acceptance is required before trusting downstream specialist conclusions.
+
+### Step 3: Numerical-method audit
 
 Agent:
 
@@ -97,7 +128,7 @@ Possible outputs:
 
 Numerical-method acceptance is required before physical interpretation. Low numerical error must not be interpreted as physical validity.
 
-### Step 3: Physical validation
+### Step 4: Physical validation
 
 Agent:
 
@@ -124,7 +155,7 @@ Possible outputs:
 
 A low numerical error does not automatically imply physical validity.
 
-### Step 4: Claim formulation
+### Step 5: Claim formulation
 
 Claims must be narrowly scoped and tied to available evidence.
 
@@ -138,7 +169,7 @@ A valid claim must state:
 
 A single benchmark must not be used to justify broad turbulence, 3D, singularity, or general robustness claims.
 
-### Step 5: Adversarial claim review
+### Step 6: Adversarial claim review
 
 Agent:
 
@@ -163,7 +194,7 @@ Possible outputs:
 - `REQUIRES NARROWING`
 - `REQUIRES MORE EVIDENCE`
 
-### Step 6: Final gate
+### Step 7: Final gate
 
 A result may be accepted only if:
 
@@ -204,6 +235,7 @@ Each reviewed result should include:
 
 - simulation configuration;
 - git commit;
+- reproducibility/CI command trace and verdict;
 - numerical-method description;
 - numerical diagnostics or convergence artifacts when relevant;
 - physical diagnostics payload;
@@ -215,6 +247,7 @@ Each reviewed result should include:
 - `kansodata-advocatus-diaboli` verdict.
 - `kansodata-scientific-literature-auditor` verdict;
 - `kansodata-chief-scientific-reviewer` final decision.
+- `kansodata-reproducibility-and-ci-auditor` verdict;
 
 ## Example
 
