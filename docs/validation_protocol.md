@@ -155,6 +155,7 @@ Consolidated scientific validation report generation:
 - `scientific_acceptance` remains `human_review_required` by design.
 - Visual artifacts are evidence support only; they are not 3D validation, not a Millennium solution, and not formal proof.
 - PDF report generation is fail-closed when consolidated critical evidence yields overall `failed` status.
+- PDF output is designed as a human-readable scientific review artifact, not as a raw console/JSON dump.
 - Forced turbulence budget and spectral outputs are diagnostic-only until scientific review.
 - Resolution sensitivity output explains spectral slope warnings and 2/3 de-alias cutoff limits; it is not a formal cascade or convergence proof.
 - HPC FFTW benchmark output is infrastructure/performance evidence only; it does not imply improved physical validity.

@@ -6,6 +6,7 @@ from pathlib import Path
 from navier_stokes_research.cli import build_parser
 from navier_stokes_research.scientific_report import (
     ArtifactSpec,
+    _humanize_discrepancy,
     generate_scientific_validation_pdf,
     generate_scientific_validation_report,
 )
@@ -292,3 +293,18 @@ def test_scientific_report_pdf_fail_closed_when_critical_evidence_missing(tmp_pa
     else:
         raise AssertionError("Expected fail-closed RuntimeError for failed overall status.")
     assert not pdf_path.exists()
+
+
+def test_scientific_report_discrepancy_text_is_human_readable_not_raw_json() -> None:
+    lines = _humanize_discrepancy(
+        {
+            "validation_id": "forced_turbulence_validation_2d",
+            "warning_tokens": ["insufficient_inertial_range_for_slope_fit"],
+            "likely_causes": ["warning_status_requires_human_review"],
+            "recommended_actions": ["inspect_artifact_metrics_before_using_results"],
+        }
+    )
+    joined = " ".join(lines)
+    assert "{" not in joined
+    assert "}" not in joined
+    assert "json" not in joined.lower()
