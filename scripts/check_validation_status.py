@@ -184,6 +184,48 @@ def _check_multi_resolution_energy_enstrophy() -> None:
     acceptance = _require_field(payload, "acceptance_statuses", "multi_resolution_energy_enstrophy")
     if not isinstance(acceptance, dict):
         raise RuntimeError("multi_resolution_energy_enstrophy.acceptance_statuses must be an object.")
+
+    # Normalized schema contract checks
+    if _require_field(payload, "schema_version", "multi_resolution_energy_enstrophy") != "1.0":
+        raise RuntimeError("multi_resolution_energy_enstrophy.schema_version must be '1.0'.")
+    if (
+        _require_field(payload, "validation_type", "multi_resolution_energy_enstrophy")
+        != "diagnostic"
+    ):
+        raise RuntimeError(
+            "multi_resolution_energy_enstrophy.validation_type must be 'diagnostic'."
+        )
+    _assert_status_not_failed(
+        _require_field(payload, "status", "multi_resolution_energy_enstrophy"),
+        "multi_resolution_energy_enstrophy.status",
+    )
+    if (
+        _require_field(payload, "solver_scope", "multi_resolution_energy_enstrophy")
+        != "2d_incompressible_periodic_pseudo_spectral"
+    ):
+        raise RuntimeError(
+            "multi_resolution_energy_enstrophy.solver_scope must be "
+            "'2d_incompressible_periodic_pseudo_spectral'."
+        )
+    claim_scope = _require_field(payload, "claim_scope", "multi_resolution_energy_enstrophy")
+    if not isinstance(claim_scope, str):
+        raise RuntimeError("multi_resolution_energy_enstrophy.claim_scope must be a string.")
+    for forbidden in ("3d", "millennium", "proof", "formal_resolution"):
+        if forbidden in claim_scope.lower():
+            raise RuntimeError(
+                "multi_resolution_energy_enstrophy.claim_scope contains forbidden token: "
+                f"{forbidden}"
+            )
+    for container_key in ("parameters", "metrics", "thresholds", "artifacts"):
+        container = _require_field(payload, container_key, "multi_resolution_energy_enstrophy")
+        if not isinstance(container, dict):
+            raise RuntimeError(
+                f"multi_resolution_energy_enstrophy.{container_key} must be an object."
+            )
+    for list_key in ("limitations", "notes"):
+        value = _require_field(payload, list_key, "multi_resolution_energy_enstrophy")
+        if not isinstance(value, list):
+            raise RuntimeError(f"multi_resolution_energy_enstrophy.{list_key} must be a list.")
     _assert_status_not_failed(
         _require_field(
             acceptance,

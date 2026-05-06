@@ -96,6 +96,10 @@ Primary references are curated in:
 
 - `docs/references.bib`
 
+Validation JSON schema contract and migration notes are documented in:
+
+- `docs/validation_json_schema.md`
+
 ## Convergence study protocol
 
 The convergence harness runs a fixed seeded scenario over multiple resolutions and writes:

@@ -18,6 +18,7 @@ from navier_stokes_research.config import (
     TimeConfig,
 )
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.validation_schema import build_validation_result
 
 STUDY_NAME = "multi_resolution_energy_enstrophy_2d"
 BASE_OUTPUT_DIR = "outputs/benchmarks"
@@ -213,7 +214,50 @@ def run_multi_resolution_energy_enstrophy_validation_2d(
     else:
         overall_status = "passed"
 
+    normalized = build_validation_result(
+        validation_id=STUDY_NAME,
+        validation_type="diagnostic",
+        status=overall_status,
+        claim_scope="numerical_regression_check",
+        parameters={
+            "resolutions": list(RESOLUTIONS),
+            "base_resolution": BASE_RESOLUTION,
+            "base_dt": BASE_DT,
+            "final_time": FINAL_TIME,
+            "viscosity": VISCOSITY,
+            "seed": SEED,
+        },
+        metrics={
+            "resolution_count": len(scenarios),
+            "status_counts": status_counts,
+            "runtime_execution": runtime_execution,
+            "energy_enstrophy_regression_status": overall_status,
+        },
+        thresholds={
+            "energy_ratio_upper_bound": RATIO_TOLERANCE_LIMIT,
+            "enstrophy_ratio_upper_bound": RATIO_TOLERANCE_LIMIT,
+            "cfl_margin_positive": True,
+            "diffusion_margin_positive": True,
+        },
+        artifacts={
+            "study_dir": str(study_dir),
+            "summary_json": str(
+                study_dir / "multi_resolution_energy_enstrophy_summary.json"
+            ),
+        },
+        limitations=[
+            "2d_periodic_scope_only",
+            "diagnostic_regression_only_not_formal_convergence_proof",
+            "not_a_3d_existence_or_smoothness_proof",
+        ],
+        notes=[
+            "This artifact is for controlled multi-resolution regression tracking.",
+            "It is not a universal physical-validity statement.",
+        ],
+    )
+
     payload = {
+        **normalized,
         "study_name": STUDY_NAME,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "scope": {
