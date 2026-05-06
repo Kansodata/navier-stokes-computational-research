@@ -100,6 +100,14 @@ Validation JSON schema contract and migration notes are documented in:
 
 - `docs/validation_json_schema.md`
 
+Consolidated scientific validation report generation:
+
+- `python -m navier_stokes_research.cli --scientific-validation-report`
+- Outputs:
+  - `outputs/reports/scientific_validation_report.json`
+  - `outputs/reports/scientific_validation_report.md`
+- `scientific_acceptance` remains `human_review_required` by design.
+
 ## Convergence study protocol
 
 The convergence harness runs a fixed seeded scenario over multiple resolutions and writes:
