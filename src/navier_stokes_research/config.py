@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 
@@ -98,9 +98,9 @@ class SimulationConfig:
     grid: GridConfig
     time: TimeConfig
     physics: PhysicsConfig
-    forcing: ForcingConfig
     initial_condition: InitialConditionConfig
     output: OutputConfig
+    forcing: ForcingConfig = field(default_factory=ForcingConfig)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -125,10 +125,10 @@ def load_config(path: str | Path) -> SimulationConfig:
         grid=_merge_dataclass(GridConfig, payload.get("grid")),
         time=_merge_dataclass(TimeConfig, payload.get("time")),
         physics=_merge_dataclass(PhysicsConfig, payload.get("physics")),
-        forcing=_merge_dataclass(ForcingConfig, payload.get("forcing")),
         initial_condition=_merge_dataclass(
             InitialConditionConfig,
             payload.get("initial_condition"),
         ),
         output=_merge_dataclass(OutputConfig, payload.get("output")),
+        forcing=_merge_dataclass(ForcingConfig, payload.get("forcing")),
     )
