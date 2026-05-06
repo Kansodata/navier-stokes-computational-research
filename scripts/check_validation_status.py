@@ -290,6 +290,46 @@ def _check_multi_resolution_energy_enstrophy() -> None:
         )
 
 
+def _check_forced_turbulence_validation() -> None:
+    payload = _load_json(
+        ROOT
+        / "forced_turbulence_validation_2d"
+        / "forced_turbulence_validation_summary.json"
+    )
+    acceptance = _require_field(payload, "acceptance_statuses", "forced_turbulence_validation")
+    if not isinstance(acceptance, dict):
+        raise RuntimeError("forced_turbulence_validation.acceptance_statuses must be an object.")
+    for key in ("runtime_execution", "accuracy_status", "budget_status"):
+        _assert_status_not_failed(
+            _require_field(acceptance, key, "forced_turbulence_validation.acceptance_statuses"),
+            f"forced_turbulence_validation.{key}",
+        )
+    budget = _require_field(payload, "budget_summary", "forced_turbulence_validation")
+    if not isinstance(budget, dict):
+        raise RuntimeError("forced_turbulence_validation.budget_summary must be an object.")
+    for key in (
+        "epsilon_in_mean",
+        "epsilon_viscous_mean",
+        "epsilon_drag_mean",
+        "normalized_residual_mean",
+        "normalized_residual_max",
+    ):
+        value = _require_field(budget, key, "forced_turbulence_validation.budget_summary")
+        if value is None:
+            raise RuntimeError(f"forced_turbulence_validation.budget_summary.{key} must not be null.")
+        _assert_finite_number(value, f"forced_turbulence_validation.budget_summary.{key}")
+    summary = _require_field(payload, "summary", "forced_turbulence_validation")
+    if not isinstance(summary, dict):
+        raise RuntimeError("forced_turbulence_validation.summary must be an object.")
+    unexpected = _require_field(summary, "unexpected_failures", "forced_turbulence_validation.summary")
+    if not isinstance(unexpected, list):
+        raise RuntimeError("forced_turbulence_validation.summary.unexpected_failures must be a list.")
+    if unexpected:
+        raise RuntimeError(
+            f"forced_turbulence_validation.summary.unexpected_failures must be empty, got: {unexpected}"
+        )
+
+
 def main() -> None:
     _check_taylor_green()
     _check_taylor_green_convergence()
@@ -297,6 +337,7 @@ def main() -> None:
     _check_stress_validation()
     _check_time_refinement()
     _check_multi_resolution_energy_enstrophy()
+    _check_forced_turbulence_validation()
     print("Validation artifact status check passed.")
 
 

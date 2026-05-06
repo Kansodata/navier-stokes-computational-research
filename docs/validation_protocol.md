@@ -104,13 +104,16 @@ Consolidated scientific validation report generation:
 
 - `python -m navier_stokes_research.cli --scientific-validation-report`
 - `python -m navier_stokes_research.cli --validation-figures`
+- `python -m navier_stokes_research.cli --forced-turbulence-validation-2d`
 - Outputs:
   - `outputs/reports/scientific_validation_report.json`
   - `outputs/reports/scientific_validation_report.md`
   - `outputs/figures/figures_manifest.json`
   - `outputs/figures/*.png`
+  - `outputs/benchmarks/forced_turbulence_validation_2d/forced_turbulence_validation_summary.json`
 - `scientific_acceptance` remains `human_review_required` by design.
 - Visual artifacts are evidence support only; they are not 3D validation, not a Millennium solution, and not formal proof.
+- Forced turbulence budget and spectral outputs are diagnostic-only until scientific review.
 
 ## Convergence study protocol
 
