@@ -160,6 +160,7 @@ Consolidated scientific validation report generation:
 - Forced turbulence budget and spectral outputs are diagnostic-only until scientific review.
 - Resolution sensitivity output explains spectral slope warnings and 2/3 de-alias cutoff limits; it is not a formal cascade or convergence proof.
 - HPC FFTW benchmark output is infrastructure/performance evidence only; it does not imply improved physical validity.
+- In the consolidated scientific report, `hpc_fftw_benchmark` is treated as a specialized non-critical infrastructure benchmark schema (`benchmark_specialized`) and should not be interpreted as core physical-validation failure when execution is successful.
 
 ## Convergence study protocol
 

@@ -119,6 +119,8 @@ def _normalize_status_for_report(value: Any) -> str:
         return "skipped"
     if lowered in {"passed", "pass", "ok", "passed_roundoff_floor"}:
         return "passed"
+    if lowered in {"info"}:
+        return "info"
     return "failed"
 
 
@@ -228,6 +230,27 @@ def _legacy_status(spec: ArtifactSpec, payload: dict[str, Any]) -> tuple[str, li
             notes,
         )
     return "warning", notes + ["unknown_legacy_mapping"]
+
+
+def _is_hpc_specialized_payload(spec: ArtifactSpec, payload: dict[str, Any]) -> bool:
+    if spec.validation_id == "hpc_fftw_benchmark":
+        return True
+    benchmark_name = payload.get("benchmark_name")
+    if isinstance(benchmark_name, str) and benchmark_name == "hpc_fftw_benchmark":
+        return True
+    return "benchmark_status" in payload
+
+
+def _classify_hpc_specialized_payload(spec: ArtifactSpec, payload: dict[str, Any]) -> tuple[str, str, list[str]]:
+    execution = _normalize_status_for_report(payload.get("execution_status"))
+    benchmark = _normalize_status_for_report(payload.get("benchmark_status"))
+    has_failure = "failed" in {execution, benchmark}
+    notes = ["specialized_schema", "non_critical_infrastructure_benchmark", "not_physical_validation_evidence"]
+    if has_failure:
+        if spec.critical:
+            return "failed", "benchmark_specialized", notes + ["benchmark_failed_critical"]
+        return "warning", "benchmark_specialized", notes + ["benchmark_failed_non_critical"]
+    return "info", "benchmark_specialized", notes
 
 
 def _utc_now() -> str:
@@ -394,7 +417,13 @@ def generate_scientific_validation_report(
 
         is_schema = payload.get("schema_version") == "1.0"
         notes: list[str] = []
-        if is_schema:
+        specialized_schema = False
+        if _is_hpc_specialized_payload(spec, payload):
+            status, schema_value, specialized_notes = _classify_hpc_specialized_payload(spec, payload)
+            validation_type = spec.validation_type
+            notes.extend(specialized_notes)
+            specialized_schema = True
+        elif is_schema:
             try:
                 notes.extend(_validate_schema_payload(payload))
                 status = _normalize_status_for_report(payload.get("status"))
@@ -439,7 +468,7 @@ def generate_scientific_validation_report(
             "validation_id": spec.validation_id,
             "validation_type": validation_type,
             "status": status,
-            "schema": "1.0" if is_schema else "legacy",
+            "schema": schema_value if specialized_schema else ("1.0" if is_schema else "legacy"),
             "path": str(spec.path),
             "critical": spec.critical,
             "notes": notes,
@@ -457,6 +486,7 @@ def generate_scientific_validation_report(
         "passed": sum(1 for item in all_items if item["status"] == "passed"),
         "warning": sum(1 for item in all_items if item["status"] == "warning"),
         "failed": sum(1 for item in all_items if item["status"] == "failed"),
+        "info": sum(1 for item in all_items if item["status"] == "info"),
         "skipped": sum(1 for item in all_items if item["status"] == "skipped"),
         "missing": sum(1 for item in all_items if item["schema"] == "missing"),
         "invalid": sum(1 for item in all_items if item["schema"] in {"invalid", "1.0_invalid"}),
@@ -699,6 +729,8 @@ def _status_palette(status: str) -> tuple[str, str]:
     normalized = status.lower()
     if normalized == "passed":
         return "#E8F5E9", "#1B5E20"
+    if normalized == "info":
+        return "#E3F2FD", "#0D47A1"
     if normalized == "warning":
         return "#FFF8E1", "#8D6E00"
     if normalized in {"failed", "missing"}:
@@ -789,12 +821,13 @@ def _draw_summary_cards(pdf: PdfPages, summary: dict[str, Any], overall_status: 
     labels = [
         ("Total artifacts", int(summary.get("total_artifacts", 0)), "#E3F2FD"),
         ("Passed", int(summary.get("passed", 0)), "#E8F5E9"),
+        ("Info", int(summary.get("info", 0)), "#E3F2FD"),
         ("Warning", int(summary.get("warning", 0)), "#FFF8E1"),
         ("Failed", int(summary.get("failed", 0)), "#FFEBEE"),
         ("Missing/Invalid", int(summary.get("missing", 0)) + int(summary.get("invalid", 0)), "#FBE9E7"),
     ]
     positions = [
-        (0.08, 0.74), (0.40, 0.74), (0.72, 0.74), (0.24, 0.58), (0.56, 0.58),
+        (0.08, 0.74), (0.36, 0.74), (0.64, 0.74), (0.22, 0.58), (0.50, 0.58), (0.78, 0.58),
     ]
     for (label, value, color), (x, y) in zip(labels, positions):
         box = plt.Rectangle((x, y), 0.20, 0.12, transform=fig.transFigure, color=color, ec="#CBD5E1")
@@ -858,7 +891,13 @@ def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]], rows_per_
         rows.append(
             [
                 _short_validation_name(str(item.get("validation_id", "unknown"))),
-                status.upper(),
+                (
+                    "NON-CRITICAL WARNING"
+                    if status == "warning"
+                    and not bool(item.get("critical", False))
+                    and "non_critical_infrastructure_benchmark" in item.get("notes", [])
+                    else status.upper()
+                ),
                 str(item.get("validation_type", "unknown")).title(),
                 "Yes" if bool(item.get("critical", False)) else "No",
                 schema,
@@ -934,6 +973,7 @@ def _draw_scientific_interpretation_page(
     interpretation_lines = [
         "What is strong evidence?",
         f"Strong evidence: {passed} artifacts are in passed status under controlled 2D periodic scope.",
+        f"Infrastructure-only evidence: {int(summary.get('info', 0))} artifacts are informational and not physical validation evidence.",
         "",
         "What needs review?",
         f"Warnings: {warning} artifacts require conservative interpretation and targeted follow-up review.",

@@ -408,3 +408,86 @@ def test_scientific_report_pdf_with_generated_figures_manifest(tmp_path: Path) -
     )
     assert generated.exists()
     assert generated.stat().st_size > 0
+
+
+def test_hpc_non_critical_specialized_schema_not_failed(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    payload = {
+        "benchmark_name": "hpc_fftw_benchmark",
+        "execution_status": "passed",
+        "benchmark_status": "passed",
+        "baseline_solver": {"status": "passed"},
+        "fftw_solver": {"status": "passed"},
+        "comparison": {"consistency_status": "passed", "performance_status": "warning"},
+    }
+    artifact_path = base / "hpc_fftw_benchmark" / "hpc_fftw_benchmark_summary.json"
+    _write_json(artifact_path, payload)
+    result = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="hpc_fftw_benchmark",
+                validation_type="diagnostic",
+                path=artifact_path,
+                critical=False,
+            )
+        ],
+    )
+    report = json.loads(Path(result["report_json_path"]).read_text(encoding="utf-8"))
+    row = report["sections"]["diagnostic"][0]
+    assert row["schema"] == "benchmark_specialized"
+    assert row["status"] == "info"
+    assert "specialized_schema" in row["notes"]
+    assert result["overall_status"] != "failed"
+
+
+def test_hpc_non_critical_failed_status_becomes_warning(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    payload = {
+        "benchmark_name": "hpc_fftw_benchmark",
+        "execution_status": "failed",
+        "benchmark_status": "failed",
+    }
+    artifact_path = base / "hpc_fftw_benchmark" / "hpc_fftw_benchmark_summary.json"
+    _write_json(artifact_path, payload)
+    result = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="hpc_fftw_benchmark",
+                validation_type="diagnostic",
+                path=artifact_path,
+                critical=False,
+            )
+        ],
+    )
+    report = json.loads(Path(result["report_json_path"]).read_text(encoding="utf-8"))
+    row = report["sections"]["diagnostic"][0]
+    assert row["status"] == "warning"
+    assert row["schema"] == "benchmark_specialized"
+    assert result["overall_status"] == "warning"
+
+
+def test_invalid_critical_artifact_remains_fail_closed(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    broken_path = base / "broken" / "artifact.json"
+    broken_path.parent.mkdir(parents=True, exist_ok=True)
+    broken_path.write_text("{invalid", encoding="utf-8")
+    result = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="critical_invalid_case",
+                validation_type="verification",
+                path=broken_path,
+                critical=True,
+            )
+        ],
+    )
+    assert result["overall_status"] == "failed"
