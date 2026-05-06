@@ -65,3 +65,7 @@ jobs:
       - name: Generate consolidated scientific validation report
         run: |
           python -m navier_stokes_research.cli --scientific-validation-report
+
+      - name: Generate reproducible validation figures
+        run: |
+          python -m navier_stokes_research.cli --validation-figures

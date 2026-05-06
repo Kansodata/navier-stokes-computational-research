@@ -212,6 +212,7 @@ def generate_scientific_validation_report(
     *,
     base_benchmark_dir: str = "outputs/benchmarks",
     output_dir: str = "outputs/reports",
+    figures_manifest_path: str = "outputs/figures/figures_manifest.json",
     artifact_specs: list[ArtifactSpec] | None = None,
 ) -> dict[str, Any]:
     benchmark_root = Path(base_benchmark_dir)
@@ -349,6 +350,38 @@ def generate_scientific_validation_report(
     else:
         overall_status = "passed"
 
+    figures_section: dict[str, Any] = {
+        "manifest": figures_manifest_path,
+        "status": "missing",
+        "generated": [],
+        "skipped": [],
+        "failed": [],
+    }
+    manifest_path = Path(figures_manifest_path)
+    if manifest_path.exists():
+        try:
+            manifest = _load_json(manifest_path)
+            figures = manifest.get("figures", [])
+            if isinstance(figures, list):
+                for figure in figures:
+                    if not isinstance(figure, dict):
+                        continue
+                    figure_id = str(figure.get("figure_id", "unknown"))
+                    status = str(figure.get("status", "unknown"))
+                    if status == "generated":
+                        figures_section["generated"].append(figure_id)
+                    elif status == "skipped":
+                        figures_section["skipped"].append(figure_id)
+                    elif status == "failed":
+                        figures_section["failed"].append(figure_id)
+                figures_section["status"] = "available"
+            else:
+                figures_section["status"] = "invalid"
+                figures_section["failed"].append("figures_manifest_invalid_structure")
+        except Exception:
+            figures_section["status"] = "invalid"
+            figures_section["failed"].append("figures_manifest_invalid_json")
+
     report_json = {
         "schema_version": "1.0",
         "report_id": "scientific_validation_report",
@@ -388,6 +421,7 @@ def generate_scientific_validation_report(
             "Expand comparisons against external references under controlled scope.",
             "Maintain multi-agent scientific audit workflow.",
         ],
+        "figures": figures_section,
         "artifacts": {
             "markdown_report": str(report_root / "scientific_validation_report.md"),
             "json_report": str(report_root / "scientific_validation_report.json"),
@@ -420,6 +454,13 @@ def generate_scientific_validation_report(
         "",
         "## Missing or Invalid Artifacts",
         *(_build_md_table_rows(sections["missing"] + sections["invalid"]) if (sections["missing"] or sections["invalid"]) else ["No missing or invalid artifacts detected."]),
+        "",
+        "## Reproducible Figures",
+        f"- Manifest: `{figures_manifest_path}`",
+        f"- Manifest status: `{figures_section['status']}`",
+        f"- Generated: {', '.join(figures_section['generated']) if figures_section['generated'] else 'none'}",
+        f"- Skipped: {', '.join(figures_section['skipped']) if figures_section['skipped'] else 'none'}",
+        f"- Failed: {', '.join(figures_section['failed']) if figures_section['failed'] else 'none'}",
         "",
         "## Scientific Limitations",
         "- 2D periodic only.",
