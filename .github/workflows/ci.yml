@@ -66,6 +66,10 @@ jobs:
         run: |
           python -m navier_stokes_research.cli --resolution-sensitivity-study-2d
 
+      - name: Run HPC FFTW benchmark (safe mode)
+        run: |
+          python -m navier_stokes_research.cli --hpc-fftw-benchmark
+
       - name: Fail closed on validation artifact statuses
         run: |
           python scripts/check_validation_status.py

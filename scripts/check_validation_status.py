@@ -330,6 +330,62 @@ def _check_forced_turbulence_validation() -> None:
         )
 
 
+def _check_hpc_fftw_benchmark() -> None:
+    payload = _load_json(
+        ROOT
+        / "hpc_fftw_benchmark"
+        / "hpc_fftw_benchmark_summary.json"
+    )
+    _assert_status_not_failed(
+        _require_field(payload, "execution_status", "hpc_fftw_benchmark"),
+        "hpc_fftw_benchmark.execution_status",
+    )
+    _assert_status_not_failed(
+        _require_field(payload, "benchmark_status", "hpc_fftw_benchmark"),
+        "hpc_fftw_benchmark.benchmark_status",
+    )
+    scientific_acceptance = _require_field(
+        payload, "scientific_acceptance", "hpc_fftw_benchmark"
+    )
+    if scientific_acceptance != "human_review_required":
+        raise RuntimeError(
+            "hpc_fftw_benchmark.scientific_acceptance must be human_review_required."
+        )
+    for solver_key in ("baseline_solver", "fftw_solver"):
+        solver = _require_field(payload, solver_key, "hpc_fftw_benchmark")
+        if not isinstance(solver, dict):
+            raise RuntimeError(f"hpc_fftw_benchmark.{solver_key} must be an object.")
+        _assert_status_not_failed(
+            _require_field(solver, "status", f"hpc_fftw_benchmark.{solver_key}"),
+            f"hpc_fftw_benchmark.{solver_key}.status",
+        )
+        status = str(solver.get("status", ""))
+        if status == "passed":
+            for metric in (
+                "initialization_time_seconds",
+                "total_runtime_seconds",
+                "average_step_time_seconds",
+                "final_energy",
+                "final_enstrophy",
+                "max_cfl",
+            ):
+                _assert_finite_number(
+                    _require_field(solver, metric, f"hpc_fftw_benchmark.{solver_key}"),
+                    f"hpc_fftw_benchmark.{solver_key}.{metric}",
+                )
+    comparison = _require_field(payload, "comparison", "hpc_fftw_benchmark")
+    if not isinstance(comparison, dict):
+        raise RuntimeError("hpc_fftw_benchmark.comparison must be an object.")
+    _assert_status_not_failed(
+        _require_field(comparison, "consistency_status", "hpc_fftw_benchmark.comparison"),
+        "hpc_fftw_benchmark.comparison.consistency_status",
+    )
+    _assert_status_not_failed(
+        _require_field(comparison, "performance_status", "hpc_fftw_benchmark.comparison"),
+        "hpc_fftw_benchmark.comparison.performance_status",
+    )
+
+
 def main() -> None:
     _check_taylor_green()
     _check_taylor_green_convergence()
@@ -338,6 +394,7 @@ def main() -> None:
     _check_time_refinement()
     _check_multi_resolution_energy_enstrophy()
     _check_forced_turbulence_validation()
+    _check_hpc_fftw_benchmark()
     print("Validation artifact status check passed.")
 
 
