@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from navier_stokes_research.config import GridConfig, PhysicsConfig, TimeConfig
+from navier_stokes_research.config import ForcingConfig, GridConfig, PhysicsConfig, TimeConfig
 from navier_stokes_research.solver import NavierStokesSpectralSolver
 from navier_stokes_research.solver.numerics import apply_dealias, spectral_gradient
 
@@ -88,3 +88,44 @@ def test_rhs_applies_dealias_to_velocity_and_full_nonlinear_term() -> None:
     rhs_solver = solver._rhs(vorticity)
     assert np.allclose(rhs_solver, rhs_expected, atol=1e-12, rtol=1e-12)
     assert not np.allclose(rhs_solver, rhs_unfiltered_velocity, atol=1e-14, rtol=1e-14)
+
+
+def test_default_ekman_drag_is_no_op_for_rhs() -> None:
+    grid = GridConfig(nx=32, ny=32)
+    physics = PhysicsConfig(viscosity=0.001)
+    time = TimeConfig(dt=0.0015, steps=4)
+    solver_default = NavierStokesSpectralSolver(grid=grid, physics=physics, time=time)
+    solver_explicit_noop = NavierStokesSpectralSolver(
+        grid=grid,
+        physics=physics,
+        time=time,
+        forcing=ForcingConfig(ekman_drag=0.0),
+    )
+    x = np.linspace(0.0, 2.0 * np.pi, 32, endpoint=False)
+    xx, yy = np.meshgrid(x, x, indexing="ij")
+    vorticity = np.sin(2.0 * xx) + 0.5 * np.cos(3.0 * yy)
+
+    assert np.allclose(solver_default._rhs(vorticity), solver_explicit_noop._rhs(vorticity))
+
+
+def test_ekman_drag_adds_negative_vorticity_proportional_rhs_term() -> None:
+    grid = GridConfig(nx=32, ny=32)
+    physics = PhysicsConfig(viscosity=0.0)
+    time = TimeConfig(dt=0.001, steps=1)
+    alpha = 0.125
+    solver_without_drag = NavierStokesSpectralSolver(grid=grid, physics=physics, time=time)
+    solver_with_drag = NavierStokesSpectralSolver(
+        grid=grid,
+        physics=physics,
+        time=time,
+        forcing=ForcingConfig(ekman_drag=alpha),
+    )
+    x = np.linspace(0.0, 2.0 * np.pi, 32, endpoint=False)
+    xx, yy = np.meshgrid(x, x, indexing="ij")
+    vorticity = np.sin(2.0 * xx) + 0.25 * np.cos(3.0 * yy)
+    omega_hat = apply_dealias(np.fft.fft2(vorticity), solver_with_drag.dealias)
+    omega_dealiased = np.fft.ifft2(omega_hat).real
+
+    drag_contribution = solver_with_drag._rhs(vorticity) - solver_without_drag._rhs(vorticity)
+
+    assert np.allclose(drag_contribution, -alpha * omega_dealiased, atol=1e-12, rtol=1e-12)
