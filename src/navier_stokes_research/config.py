@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 
@@ -25,6 +25,52 @@ class TimeConfig:
 @dataclass(frozen=True)
 class PhysicsConfig:
     viscosity: float = 0.001
+
+
+@dataclass(frozen=True)
+class ForcingConfig:
+    """Configuration gate for future controlled 2D forcing experiments.
+
+    Phase 1 intentionally keeps forcing disabled by default and rejects attempts to
+    enable it before solver/runtime support is implemented. This preserves exact
+    unforced baseline semantics while making future forcing configuration explicit
+    and auditable.
+    """
+
+    enabled: bool = False
+    forcing_type: str = "none"
+    k_min: float = 0.0
+    k_max: float = 0.0
+    seed: int = 42
+    ou_correlation_time: float = 1.0
+    ou_noise_amplitude: float = 0.0
+    target_energy_input_rate: float = 0.0
+    ekman_drag: float = 0.0
+
+    def __post_init__(self) -> None:
+        allowed_types = {"none", "fourier_ou_narrow_band"}
+        if self.forcing_type not in allowed_types:
+            raise ValueError(f"Unsupported forcing_type: {self.forcing_type}")
+        if self.enabled:
+            raise ValueError(
+                "Forcing configuration is present but runtime forcing support is not implemented yet."
+            )
+        if self.forcing_type != "none":
+            raise ValueError("Disabled Phase 1 forcing config must use forcing_type='none'.")
+        if self.k_min < 0.0:
+            raise ValueError("forcing.k_min must be non-negative")
+        if self.k_max < 0.0:
+            raise ValueError("forcing.k_max must be non-negative")
+        if self.k_max < self.k_min:
+            raise ValueError("forcing.k_max must be greater than or equal to forcing.k_min")
+        if self.ou_correlation_time <= 0.0:
+            raise ValueError("forcing.ou_correlation_time must be positive")
+        if self.ou_noise_amplitude < 0.0:
+            raise ValueError("forcing.ou_noise_amplitude must be non-negative")
+        if self.target_energy_input_rate < 0.0:
+            raise ValueError("forcing.target_energy_input_rate must be non-negative")
+        if self.ekman_drag < 0.0:
+            raise ValueError("forcing.ekman_drag must be non-negative")
 
 
 @dataclass(frozen=True)
@@ -54,6 +100,7 @@ class SimulationConfig:
     physics: PhysicsConfig
     initial_condition: InitialConditionConfig
     output: OutputConfig
+    forcing: ForcingConfig = field(default_factory=ForcingConfig)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -83,4 +130,5 @@ def load_config(path: str | Path) -> SimulationConfig:
             payload.get("initial_condition"),
         ),
         output=_merge_dataclass(OutputConfig, payload.get("output")),
+        forcing=_merge_dataclass(ForcingConfig, payload.get("forcing")),
     )
