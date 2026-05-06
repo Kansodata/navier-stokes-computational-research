@@ -20,6 +20,16 @@ from navier_stokes_research.validation_schema import (
 )
 
 FORBIDDEN_CLAIM_TOKENS = ("3d", "millennium", "proof", "formal_resolution")
+PDF_FIGSIZE = (8.27, 11.69)
+PDF_MARGIN_LEFT = 0.07
+PDF_MARGIN_RIGHT = 0.93
+PDF_HEADER_TOP = 0.965
+PDF_BODY_TOP = 0.90
+PDF_BODY_BOTTOM = 0.08
+PDF_COLOR_TITLE = "#0F172A"
+PDF_COLOR_TEXT = "#334155"
+PDF_COLOR_BORDER = "#CBD5E1"
+PDF_COLOR_HEADER_BG = "#E2E8F0"
 
 
 @dataclass(frozen=True)
@@ -628,39 +638,59 @@ def _table_lines(items: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _new_pdf_page(title: str, subtitle: str | None = None) -> tuple[Any, Any]:
+    fig, ax = plt.subplots(figsize=PDF_FIGSIZE)
+    ax.axis("off")
+    fig.patch.set_facecolor("white")
+    fig.text(PDF_MARGIN_LEFT, PDF_HEADER_TOP, title, fontsize=16, fontweight="bold", color=PDF_COLOR_TITLE, va="top")
+    if subtitle:
+        fig.text(PDF_MARGIN_LEFT, PDF_HEADER_TOP - 0.03, subtitle, fontsize=10.5, color=PDF_COLOR_TEXT, va="top")
+    return fig, ax
+
+
+def _draw_footer(fig: Any, page_label: str) -> None:
+    fig.text(PDF_MARGIN_LEFT, 0.025, page_label, fontsize=8.5, color="#64748B")
+    fig.text(PDF_MARGIN_RIGHT, 0.025, "Kansodata Scientific Report", fontsize=8.5, color="#64748B", ha="right")
+
+
+def _draw_section_header(fig: Any, title: str, y: float) -> float:
+    fig.text(PDF_MARGIN_LEFT, y, title, fontsize=12, fontweight="bold", color=PDF_COLOR_TITLE, va="top")
+    return y - 0.03
+
+
+def _wrap_text(text: str, width: int = 100) -> list[str]:
+    if not text:
+        return [""]
+    return textwrap.wrap(text, width=width) or [text]
+
+
+def _snake_case_to_sentence(value: str) -> str:
+    return value.replace("_", " ").strip().capitalize()
+
+
 def _text_page(
     pdf: PdfPages,
     title: str,
     lines: list[str],
     *,
+    subtitle: str | None = None,
     fontsize: int = 10,
     wrap_width: int = 100,
+    page_label: str = "",
 ) -> None:
-    fig, ax = plt.subplots(figsize=(8.27, 11.69))
-    ax.axis("off")
-    fig.text(0.07, 0.965, title, fontsize=15, fontweight="bold", va="top")
-    y = 0.93
+    fig, _ = _new_pdf_page(title, subtitle=subtitle)
+    y = PDF_BODY_TOP
     for line in lines:
-        wrapped_lines = [""]
-        if line:
-            wrapped_lines = textwrap.wrap(line, width=wrap_width) or [line]
-        for wrapped in wrapped_lines:
-            fig.text(0.07, y, wrapped, fontsize=fontsize, va="top")
-            y -= 0.026
-            if y < 0.05:
+        for wrapped in _wrap_text(line, width=wrap_width):
+            fig.text(PDF_MARGIN_LEFT, y, wrapped, fontsize=fontsize, color=PDF_COLOR_TEXT, va="top")
+            y -= 0.024
+            if y < PDF_BODY_BOTTOM:
+                _draw_footer(fig, page_label or title)
                 pdf.savefig(fig, bbox_inches="tight")
                 plt.close(fig)
-                fig, ax = plt.subplots(figsize=(8.27, 11.69))
-                ax.axis("off")
-                fig.text(0.07, 0.965, f"{title} (cont.)", fontsize=15, fontweight="bold", va="top")
-                y = 0.93
-        if y < 0.05:
-            pdf.savefig(fig, bbox_inches="tight")
-            plt.close(fig)
-            fig, ax = plt.subplots(figsize=(8.27, 11.69))
-            ax.axis("off")
-            fig.text(0.07, 0.965, f"{title} (cont.)", fontsize=15, fontweight="bold", va="top")
-            y = 0.93
+                fig, _ = _new_pdf_page(f"{title} (cont.)", subtitle=subtitle)
+                y = PDF_BODY_TOP
+    _draw_footer(fig, page_label or title)
     pdf.savefig(fig, bbox_inches="tight")
     plt.close(fig)
 
@@ -711,13 +741,11 @@ def _draw_cover_page(
     overall_status: str,
     scientific_acceptance: str,
 ) -> None:
-    fig, ax = plt.subplots(figsize=(8.27, 11.69))
-    ax.axis("off")
+    fig, _ = _new_pdf_page("Scientific Validation Report", subtitle="Consolidated evidence package for controlled 2D periodic simulations")
     fig.patch.set_facecolor("#F7FAFC")
-    fig.text(0.08, 0.92, "Scientific Validation Report", fontsize=24, fontweight="bold", color="#0F172A")
-    fig.text(0.08, 0.88, "Human-readable scientific review artifact", fontsize=12, color="#334155")
-    fig.text(0.08, 0.83, f"Generated at (UTC): {generated_at}", fontsize=11, color="#334155")
-    fig.text(0.08, 0.80, f"Scope: {CANONICAL_SOLVER_SCOPE}", fontsize=11, color="#334155")
+    fig.text(0.08, 0.86, "Human-readable scientific review artifact", fontsize=12, color=PDF_COLOR_TEXT)
+    fig.text(0.08, 0.82, f"Generated at (UTC): {generated_at}", fontsize=11, color=PDF_COLOR_TEXT)
+    fig.text(0.08, 0.79, f"Scope: {CANONICAL_SOLVER_SCOPE}", fontsize=11, color=PDF_COLOR_TEXT)
 
     background, text_color = _status_palette(overall_status)
     badge = plt.Rectangle((0.08, 0.72), 0.84, 0.08, transform=fig.transFigure, color=background, ec="#CBD5E1")
@@ -732,7 +760,7 @@ def _draw_cover_page(
         color="#334155",
     )
 
-    fig.text(0.08, 0.64, "Scope limits", fontsize=12, fontweight="bold", color="#1E293B")
+    fig.text(0.08, 0.64, "Scope limits", fontsize=12, fontweight="bold", color=PDF_COLOR_TITLE)
     limits = [
         "2D periodic baseline only.",
         "No 3D Navier-Stokes solution claim.",
@@ -744,20 +772,19 @@ def _draw_cover_page(
     for limit in limits:
         fig.text(0.10, y, f"- {limit}", fontsize=10.5, color="#334155")
         y -= 0.03
+    _draw_footer(fig, "Cover")
     pdf.savefig(fig, bbox_inches="tight")
     plt.close(fig)
 
 
 def _draw_summary_cards(pdf: PdfPages, summary: dict[str, Any], overall_status: str) -> None:
-    fig, ax = plt.subplots(figsize=(8.27, 11.69))
-    ax.axis("off")
-    fig.text(0.08, 0.94, "Executive Summary", fontsize=18, fontweight="bold", color="#0F172A")
+    fig, _ = _new_pdf_page("Executive Summary", subtitle="Evidence-first dashboard and conservative executive conclusion")
     fig.text(
         0.08,
         0.90,
         "Evidence-first snapshot of artifact status for controlled 2D periodic validation.",
         fontsize=11,
-        color="#334155",
+        color=PDF_COLOR_TEXT,
     )
     labels = [
         ("Total artifacts", int(summary.get("total_artifacts", 0)), "#E3F2FD"),
@@ -776,11 +803,17 @@ def _draw_summary_cards(pdf: PdfPages, summary: dict[str, Any], overall_status: 
         fig.text(x + 0.02, y + 0.03, str(value), fontsize=20, fontweight="bold", color="#0F172A")
     fig.text(
         0.08,
-        0.48,
+        0.50,
         f"Overall status remains {overall_status.upper()}. Fail-closed interpretation applies for failed or missing critical evidence.",
         fontsize=10.5,
-        color="#334155",
+        color=PDF_COLOR_TEXT,
     )
+    conclusion = (
+        f"Executive conclusion: {int(summary.get('passed', 0))} passed, {int(summary.get('warning', 0))} warning, "
+        f"{int(summary.get('failed', 0))} failed, overall {overall_status}. Human review required."
+    )
+    fig.text(0.08, 0.45, conclusion, fontsize=10.5, color=PDF_COLOR_TEXT)
+    _draw_footer(fig, "Executive Summary")
     pdf.savefig(fig, bbox_inches="tight")
     plt.close(fig)
 
@@ -836,15 +869,16 @@ def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]], rows_per_
 
     chunks = [rows[i : i + rows_per_page] for i in range(0, len(rows), rows_per_page)]
     for page_idx, chunk in enumerate(chunks, start=1):
-        fig, ax = plt.subplots(figsize=(11.69, 8.27))
-        ax.axis("off")
+        fig, ax = _new_pdf_page(
+            f"Validation Matrix (page {page_idx}/{len(chunks)})",
+            subtitle="Simplified status matrix. Full artifact routes are listed in Artifact Index.",
+        )
         fig.text(
             0.05,
-            0.95,
-            f"Validation Matrix (page {page_idx}/{len(chunks)})",
-            fontsize=16,
-            fontweight="bold",
-            color="#0F172A",
+            0.89,
+            "Columns: Validation, Status, Evidence type, Critical, Schema",
+            fontsize=9.5,
+            color="#64748B",
         )
         table = ax.table(
             cellText=chunk,
@@ -852,12 +886,12 @@ def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]], rows_per_
             cellLoc="left",
             colLoc="left",
             loc="center",
-            bbox=[0.04, 0.08, 0.92, 0.82],
+            bbox=[0.04, 0.14, 0.92, 0.68],
             colWidths=[0.36, 0.14, 0.20, 0.12, 0.18],
         )
         table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1.0, 1.35)
+        table.set_fontsize(9.3)
+        table.scale(1.0, 1.25)
         for col in range(5):
             header_cell = table[(0, col)]
             header_cell.set_facecolor("#E2E8F0")
@@ -877,11 +911,12 @@ def _draw_validation_table(pdf: PdfPages, items: list[dict[str, Any]], rows_per_
                     cell.set_facecolor("#FFFFFF")
         fig.text(
             0.05,
-            0.03,
+            0.09,
             "Full artifact routes are listed in the final Artifact Index section.",
             fontsize=9,
             color="#475569",
         )
+        _draw_footer(fig, f"Validation Matrix {page_idx}/{len(chunks)}")
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
 
@@ -897,10 +932,13 @@ def _draw_scientific_interpretation_page(
     failed = int(summary.get("failed", 0))
     missing_invalid = int(summary.get("missing", 0)) + int(summary.get("invalid", 0))
     interpretation_lines = [
-        "Scientific Interpretation",
-        "",
+        "What is strong evidence?",
         f"Strong evidence: {passed} artifacts are in passed status under controlled 2D periodic scope.",
+        "",
+        "What needs review?",
         f"Warnings: {warning} artifacts require conservative interpretation and targeted follow-up review.",
+        "",
+        "What blocks stronger claims?",
         f"Failures: {failed} artifacts indicate non-acceptable evidence for unconditional acceptance.",
         f"Missing/invalid: {missing_invalid} artifacts reduce traceability and must be addressed before stronger claims.",
         "",
@@ -912,6 +950,11 @@ def _draw_scientific_interpretation_page(
         "- No Millennium Problem claim.",
         "- No mathematical proof claim.",
         "- No broad physical generalization beyond validated scenarios.",
+        "",
+        "Recommended next actions",
+        "- Inspect warning artifacts first and confirm reproducibility of key metrics.",
+        "- Address missing/invalid artifacts before attempting stronger interpretations.",
+        "- Keep all statements scoped to controlled 2D periodic evidence.",
     ]
     if human_review_required:
         interpretation_lines.append("")
@@ -923,6 +966,7 @@ def _draw_scientific_interpretation_page(
         interpretation_lines,
         fontsize=10.5,
         wrap_width=102,
+        page_label="Scientific Interpretation",
     )
 
 
@@ -940,22 +984,21 @@ def _draw_warning_cards(pdf: PdfPages, discrepancy: list[dict[str, Any]]) -> Non
     cards_per_page = 3
     chunks = [discrepancy[i : i + cards_per_page] for i in range(0, len(discrepancy), cards_per_page)]
     for page_idx, chunk in enumerate(chunks, start=1):
-        fig, ax = plt.subplots(figsize=(8.27, 11.69))
-        ax.axis("off")
-        fig.text(0.07, 0.96, f"Warnings and Gaps (page {page_idx}/{len(chunks)})", fontsize=15, fontweight="bold")
+        fig, _ = _new_pdf_page(f"Warnings and Gaps (page {page_idx}/{len(chunks)})", subtitle="Per-validation warning cards for conservative review")
         top = 0.88
         for item in chunk:
             card = plt.Rectangle((0.06, top - 0.24), 0.88, 0.22, transform=fig.transFigure, color="#FFFDF5", ec="#E2E8F0")
             fig.patches.append(card)
             validation_label = _short_validation_name(str(item.get("validation_id", "unknown")))
-            warning_tokens = item.get("warning_tokens", [])
+            warning_tokens = item.get("warning_tokens", [])[:2]
             likely_causes = item.get("likely_causes", [])
             recommended_actions = item.get("recommended_actions", [])
             fig.text(0.08, top - 0.04, validation_label, fontsize=11, fontweight="bold", color="#0F172A")
             fig.text(
                 0.08,
                 top - 0.08,
-                "Warning: " + (", ".join(str(token) for token in warning_tokens) if warning_tokens else "human review required"),
+                "Warning: "
+                + (", ".join(_snake_case_to_sentence(str(token))[:70] for token in warning_tokens) if warning_tokens else "Human review required"),
                 fontsize=9.5,
                 color="#334155",
             )
@@ -963,7 +1006,7 @@ def _draw_warning_cards(pdf: PdfPages, discrepancy: list[dict[str, Any]]) -> Non
                 0.08,
                 top - 0.12,
                 "Likely cause: "
-                + ("; ".join(str(token).replace("_", " ") for token in likely_causes[:2]) if likely_causes else "insufficient constrained evidence"),
+                + ("; ".join(_snake_case_to_sentence(str(token)) for token in likely_causes[:2]) if likely_causes else "Insufficient constrained evidence"),
                 fontsize=9.5,
                 color="#334155",
             )
@@ -971,7 +1014,7 @@ def _draw_warning_cards(pdf: PdfPages, discrepancy: list[dict[str, Any]]) -> Non
                 0.08,
                 top - 0.16,
                 "Recommended action: "
-                + ("; ".join(str(token).replace("_", " ") for token in recommended_actions[:2]) if recommended_actions else "review artifacts and rerun targeted diagnostics"),
+                + ("; ".join(_snake_case_to_sentence(str(token)) for token in recommended_actions[:2]) if recommended_actions else "Review artifacts and rerun targeted diagnostics"),
                 fontsize=9.5,
                 color="#334155",
             )
@@ -983,6 +1026,7 @@ def _draw_warning_cards(pdf: PdfPages, discrepancy: list[dict[str, Any]]) -> Non
                 color="#475569",
             )
             top -= 0.28
+        _draw_footer(fig, f"Warnings and Gaps {page_idx}/{len(chunks)}")
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
 
@@ -998,17 +1042,19 @@ def _draw_figures_pages(pdf: PdfPages, figure_paths: list[Path]) -> None:
         )
         return
     for idx, figure_path in enumerate(figure_paths[:3], start=1):
-        fig, ax = plt.subplots(figsize=(11.69, 8.27))
-        ax.axis("off")
-        fig.text(0.05, 0.95, f"Validation Figure {idx}", fontsize=15, fontweight="bold")
-        fig.text(0.05, 0.92, _short_path_label(str(figure_path)), fontsize=9.5, color="#475569")
+        title = f"Figure Evidence: {_short_validation_name(figure_path.stem)}"
+        fig, ax = _new_pdf_page(title, subtitle=_short_path_label(str(figure_path)))
         try:
             image = plt.imread(figure_path)
-            ax.imshow(image)
-            ax.set_position([0.05, 0.08, 0.9, 0.80])
+            ax.imshow(image, aspect="equal")
+            ax.set_position([0.08, 0.22, 0.84, 0.58])
             ax.axis("off")
+            fig.text(0.08, 0.14, "Interpretation: Diagnostic support only.", fontsize=9.5, color=PDF_COLOR_TEXT)
+            fig.text(0.08, 0.11, "Interpretation: Requires human review.", fontsize=9.5, color=PDF_COLOR_TEXT)
+            fig.text(0.08, 0.08, "Interpretation: No formal proof claim.", fontsize=9.5, color=PDF_COLOR_TEXT)
         except Exception:
             fig.text(0.05, 0.86, "Figure could not be rendered; path listed in Artifact Index.", fontsize=10, color="#B45309")
+        _draw_footer(fig, f"Figure Evidence {idx}")
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
 
@@ -1047,8 +1093,6 @@ def _draw_artifact_index_page(
     items: list[dict[str, Any]],
 ) -> None:
     lines = [
-        "Artifact Index",
-        "",
         f"JSON report: {report_json_path}",
         f"Markdown report: {markdown_report_path}",
         f"Figures manifest: {figures_manifest_path}",
@@ -1057,7 +1101,7 @@ def _draw_artifact_index_page(
     ]
     for item in items:
         lines.append(f"- {str(item.get('validation_id', 'unknown'))}: {str(item.get('path', 'unknown'))}")
-    _text_page(pdf, "Artifact Index", lines, fontsize=8.8, wrap_width=115)
+    _text_page(pdf, "Artifact Index", lines, fontsize=8.6, wrap_width=115, page_label="Artifact Index")
 
 
 def generate_scientific_validation_pdf(

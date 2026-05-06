@@ -7,12 +7,15 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from navier_stokes_research.cli import build_parser
+import navier_stokes_research.scientific_report as scientific_report_module
 from navier_stokes_research.scientific_report import (
     ArtifactSpec,
+    PDF_FIGSIZE,
     _humanize_discrepancy,
     _select_generated_figure_paths,
     _short_path_label,
     _short_validation_name,
+    _snake_case_to_sentence,
     generate_scientific_validation_pdf,
     generate_scientific_validation_report,
 )
@@ -325,6 +328,16 @@ def test_short_helpers_produce_legible_labels() -> None:
 def test_pdf_generator_source_avoids_console_table_string() -> None:
     source = inspect.getsource(generate_scientific_validation_pdf)
     assert "validation_id | type | status | schema | path" not in source
+
+
+def test_pdf_layout_constant_is_a4_portrait_and_no_landscape_pages() -> None:
+    assert PDF_FIGSIZE == (8.27, 11.69)
+    source = inspect.getsource(scientific_report_module)
+    assert "figsize=(11.69, 8.27)" not in source
+
+
+def test_snake_case_humanization_is_readable() -> None:
+    assert _snake_case_to_sentence("warning_status_requires_human_review") == "Warning status requires human review"
 
 
 def test_select_generated_figure_paths_reads_manifest(tmp_path: Path) -> None:
