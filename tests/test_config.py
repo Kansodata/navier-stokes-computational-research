@@ -29,9 +29,34 @@ def test_load_config_adds_disabled_forcing_defaults(tmp_path: Path) -> None:
     assert config.to_dict()["forcing"]["forcing_type"] == "none"
 
 
-def test_forcing_config_rejects_enabled_until_runtime_support_exists() -> None:
-    with pytest.raises(ValueError, match="runtime forcing support is not implemented"):
+def test_forcing_config_accepts_enabled_deterministic_narrow_band() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_deterministic_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        target_energy_input_rate=0.01,
+        ekman_drag=0.1,
+    )
+
+    assert forcing.enabled is True
+    assert forcing.forcing_type == "fourier_deterministic_narrow_band"
+
+
+def test_forcing_config_rejects_enabled_without_implemented_type() -> None:
+    with pytest.raises(ValueError, match="must use an implemented forcing_type"):
         ForcingConfig(enabled=True)
+
+
+def test_forcing_config_rejects_ou_until_runtime_support_exists() -> None:
+    with pytest.raises(ValueError, match="Ornstein-Uhlenbeck forcing is not implemented"):
+        ForcingConfig(
+            enabled=True,
+            forcing_type="fourier_ou_narrow_band",
+            k_min=2.0,
+            k_max=4.0,
+            target_energy_input_rate=0.01,
+        )
 
 
 def test_forcing_config_rejects_non_none_type_while_disabled() -> None:
@@ -56,3 +81,19 @@ def test_forcing_config_rejects_invalid_numeric_parameters() -> None:
 def test_forcing_config_rejects_inverted_forcing_band() -> None:
     with pytest.raises(ValueError, match="k_max must be greater than or equal"):
         ForcingConfig(k_min=4.0, k_max=3.0)
+
+
+def test_forcing_config_rejects_enabled_zero_band_or_zero_input_rate() -> None:
+    with pytest.raises(ValueError, match="k_max > 0"):
+        ForcingConfig(
+            enabled=True,
+            forcing_type="fourier_deterministic_narrow_band",
+            target_energy_input_rate=0.01,
+        )
+    with pytest.raises(ValueError, match="target_energy_input_rate > 0"):
+        ForcingConfig(
+            enabled=True,
+            forcing_type="fourier_deterministic_narrow_band",
+            k_min=2.0,
+            k_max=4.0,
+        )

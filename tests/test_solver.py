@@ -129,3 +129,97 @@ def test_ekman_drag_adds_negative_vorticity_proportional_rhs_term() -> None:
     drag_contribution = solver_with_drag._rhs(vorticity) - solver_without_drag._rhs(vorticity)
 
     assert np.allclose(drag_contribution, -alpha * omega_dealiased, atol=1e-12, rtol=1e-12)
+
+
+def test_deterministic_fourier_forcing_is_seed_reproducible_and_mean_zero() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_deterministic_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        seed=123,
+        target_energy_input_rate=0.01,
+    )
+    solver_a = NavierStokesSpectralSolver(
+        grid=GridConfig(nx=32, ny=32),
+        physics=PhysicsConfig(viscosity=0.0),
+        time=TimeConfig(dt=0.001, steps=1),
+        forcing=forcing,
+    )
+    solver_b = NavierStokesSpectralSolver(
+        grid=GridConfig(nx=32, ny=32),
+        physics=PhysicsConfig(viscosity=0.0),
+        time=TimeConfig(dt=0.001, steps=1),
+        forcing=forcing,
+    )
+
+    assert np.allclose(solver_a.forcing_field, solver_b.forcing_field)
+    assert float(np.mean(solver_a.forcing_field)) == pytest.approx(0.0, abs=1e-15)
+    assert np.all(np.isfinite(solver_a.forcing_field))
+
+
+def test_deterministic_fourier_forcing_is_band_limited_and_dealiased() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_deterministic_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        seed=123,
+        target_energy_input_rate=0.01,
+    )
+    solver = NavierStokesSpectralSolver(
+        grid=GridConfig(nx=32, ny=32),
+        physics=PhysicsConfig(viscosity=0.0),
+        time=TimeConfig(dt=0.001, steps=1),
+        forcing=forcing,
+    )
+    forcing_hat = np.fft.fft2(solver.forcing_field)
+    outside_active_band = ~solver.forcing_mask
+
+    assert np.count_nonzero(solver.forcing_mask) > 0
+    assert np.allclose(forcing_hat[outside_active_band], 0.0, atol=1e-10)
+
+
+def test_deterministic_fourier_forcing_contributes_to_rhs_when_enabled() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_deterministic_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        seed=321,
+        target_energy_input_rate=0.01,
+    )
+    grid = GridConfig(nx=32, ny=32)
+    physics = PhysicsConfig(viscosity=0.0)
+    time = TimeConfig(dt=0.001, steps=1)
+    solver_without_forcing = NavierStokesSpectralSolver(grid=grid, physics=physics, time=time)
+    solver_with_forcing = NavierStokesSpectralSolver(
+        grid=grid,
+        physics=physics,
+        time=time,
+        forcing=forcing,
+    )
+    vorticity = np.zeros((32, 32))
+
+    rhs_delta = solver_with_forcing._rhs(vorticity) - solver_without_forcing._rhs(vorticity)
+
+    assert np.allclose(rhs_delta, solver_with_forcing.forcing_field, atol=1e-12, rtol=1e-12)
+
+
+def test_deterministic_fourier_forcing_fails_closed_for_empty_active_band() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_deterministic_narrow_band",
+        k_min=10_000.0,
+        k_max=10_001.0,
+        seed=321,
+        target_energy_input_rate=0.01,
+    )
+
+    with pytest.raises(ValueError, match="contains no active de-aliased modes"):
+        NavierStokesSpectralSolver(
+            grid=GridConfig(nx=32, ny=32),
+            physics=PhysicsConfig(viscosity=0.0),
+            time=TimeConfig(dt=0.001, steps=1),
+            forcing=forcing,
+        )
