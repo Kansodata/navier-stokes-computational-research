@@ -11,6 +11,7 @@ The current validation layer checks:
 - CFL margin against configured limit,
 - diffusion stability margin against configured limit.
 - finite error comparison against the analytical 2D Taylor-Green vortex for the controlled canonical setup.
+- finite RHS consistency comparison against a manufactured smooth periodic 2D vorticity-streamfunction solution (MMS).
 
 It also supports an incompressibility residual field in the report when available.
 
@@ -23,6 +24,36 @@ This protocol does not establish:
 - boundary-condition generality beyond periodic domains,
 - or any theorem-level result.
 - The Taylor-Green check is only a controlled 2D validation target and does not establish global 3D existence/smoothness.
+- The MMS check is only a controlled 2D consistency validation target and does not establish global 3D existence/smoothness.
+
+## MMS 2D periodic consistency validation
+
+The command:
+
+- `python -m navier_stokes_research.cli --mms-validation-2d`
+
+evaluates a manufactured periodic smooth 2D vorticity field and analytic source term for:
+
+- `omega_t + u·grad(omega) = nu Delta(omega) + f_mms`
+
+and writes:
+
+- `outputs/benchmarks/mms_validation_2d/mms_validation_summary.json`
+
+The JSON includes:
+
+- `schema_version`,
+- `validation_name`,
+- `scientific_scope`,
+- `scientific_acceptance`,
+- `status`,
+- `max_absolute_error`,
+- `l2_relative_error`,
+- `resolution`,
+- `viscosity`,
+- `limitations`.
+
+This harness is numerical evidence for operator-level consistency in 2D periodic conditions only. It is not a 3D claim, not a Millennium claim, and not a formal proof.
 
 ## Taylor-Green 2D controlled validation
 
@@ -103,22 +134,27 @@ Validation JSON schema contract and migration notes are documented in:
 Consolidated scientific validation report generation:
 
 - `python -m navier_stokes_research.cli --scientific-validation-report`
+- `python -m navier_stokes_research.cli --scientific-validation-report --pdf`
 - `python -m navier_stokes_research.cli --validation-figures`
 - `python -m navier_stokes_research.cli --forced-turbulence-validation-2d`
 - `python -m navier_stokes_research.cli --resolution-sensitivity-study-2d`
 - `python -m navier_stokes_research.cli --hpc-fftw-benchmark`
+- `python -m navier_stokes_research.cli --mms-validation-2d`
 - `python scripts/hpc_fftw_benchmark.py` for manual benchmark execution.
 - `python scripts/resolution_sensitivity_study.py` for the extended `64,128,256,512` forced-resolution matrix.
 - Outputs:
   - `outputs/reports/scientific_validation_report.json`
   - `outputs/reports/scientific_validation_report.md`
+  - `outputs/reports/scientific_validation_report.pdf`
   - `outputs/figures/figures_manifest.json`
   - `outputs/figures/*.png`
   - `outputs/benchmarks/forced_turbulence_validation_2d/forced_turbulence_validation_summary.json`
   - `outputs/benchmarks/resolution_sensitivity_2d/resolution_sensitivity_summary.json`
   - `outputs/benchmarks/hpc_fftw_benchmark/hpc_fftw_benchmark_summary.json`
+  - `outputs/benchmarks/mms_validation_2d/mms_validation_summary.json`
 - `scientific_acceptance` remains `human_review_required` by design.
 - Visual artifacts are evidence support only; they are not 3D validation, not a Millennium solution, and not formal proof.
+- PDF report generation is fail-closed when consolidated critical evidence yields overall `failed` status.
 - Forced turbulence budget and spectral outputs are diagnostic-only until scientific review.
 - Resolution sensitivity output explains spectral slope warnings and 2/3 de-alias cutoff limits; it is not a formal cascade or convergence proof.
 - HPC FFTW benchmark output is infrastructure/performance evidence only; it does not imply improved physical validity.

@@ -6,6 +6,7 @@ from pathlib import Path
 from navier_stokes_research.cli import build_parser
 from navier_stokes_research.scientific_report import (
     ArtifactSpec,
+    generate_scientific_validation_pdf,
     generate_scientific_validation_report,
 )
 from navier_stokes_research.validation_schema import build_validation_result
@@ -20,6 +21,13 @@ def test_cli_parser_supports_scientific_validation_report_flag() -> None:
     parser = build_parser()
     args = parser.parse_args(["--scientific-validation-report"])
     assert args.scientific_validation_report is True
+
+
+def test_cli_parser_supports_pdf_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--scientific-validation-report", "--pdf"])
+    assert args.scientific_validation_report is True
+    assert args.pdf is True
 
 
 def test_scientific_report_generates_json_and_markdown(tmp_path: Path) -> None:
@@ -220,3 +228,67 @@ def test_scientific_report_adds_discrepancy_analysis_for_warning_artifact(tmp_pa
 
     markdown = Path(result["report_markdown_path"]).read_text(encoding="utf-8")
     assert "## Discrepancy Analysis" in markdown
+
+
+def test_scientific_report_pdf_is_generated(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    artifact = build_validation_result(
+        validation_id="unit_pdf_case",
+        validation_type="diagnostic",
+        status="passed",
+        claim_scope="diagnostic_only",
+        metrics={"x": 1.0},
+    )
+    artifact_path = base / "unit" / "artifact.json"
+    _write_json(artifact_path, artifact)
+    report = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="unit_pdf_case",
+                validation_type="diagnostic",
+                path=artifact_path,
+                critical=True,
+            )
+        ],
+    )
+    pdf_path = out / "scientific_validation_report.pdf"
+    generated = generate_scientific_validation_pdf(
+        report_json_path=str(report["report_json_path"]),
+        output_pdf_path=str(pdf_path),
+    )
+    assert generated.exists()
+    assert generated.suffix == ".pdf"
+    assert generated.stat().st_size > 0
+
+
+def test_scientific_report_pdf_fail_closed_when_critical_evidence_missing(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    missing_path = base / "missing" / "artifact.json"
+    report = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="critical_missing",
+                validation_type="verification",
+                path=missing_path,
+                critical=True,
+            )
+        ],
+    )
+    pdf_path = out / "scientific_validation_report.pdf"
+    try:
+        generate_scientific_validation_pdf(
+            report_json_path=str(report["report_json_path"]),
+            output_pdf_path=str(pdf_path),
+            fail_closed_on_failed=True,
+        )
+    except RuntimeError as exc:
+        assert "Fail-closed" in str(exc)
+    else:
+        raise AssertionError("Expected fail-closed RuntimeError for failed overall status.")
+    assert not pdf_path.exists()

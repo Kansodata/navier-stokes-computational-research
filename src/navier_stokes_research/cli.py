@@ -14,6 +14,7 @@ from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.multi_resolution_validation import (
     run_multi_resolution_energy_enstrophy_validation_2d,
 )
+from navier_stokes_research.mms_validation import run_mms_validation_2d
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
 from navier_stokes_research.resolution_sensitivity_study import (
@@ -22,6 +23,7 @@ from navier_stokes_research.resolution_sensitivity_study import (
     run_resolution_sensitivity_study_2d,
 )
 from navier_stokes_research.scientific_report import generate_scientific_validation_report
+from navier_stokes_research.scientific_report import generate_scientific_validation_pdf
 from navier_stokes_research.stress_validation import run_stress_validation_2d
 from navier_stokes_research.time_refinement import run_time_refinement_validation_2d
 from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
@@ -150,6 +152,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run extended HPC benchmark mode with more steps (still 2D periodic infrastructure benchmark only).",
     )
+    parser.add_argument(
+        "--pdf",
+        action="store_true",
+        help="Generate PDF artifact when used with --scientific-validation-report.",
+    )
+    parser.add_argument(
+        "--mms-validation-2d",
+        action="store_true",
+        help="Run manufactured-solution 2D periodic RHS consistency validation and write mms_validation_summary.json.",
+    )
     return parser
 
 
@@ -209,9 +221,13 @@ def main() -> None:
         result = generate_scientific_validation_report(
             base_benchmark_dir=args.benchmark_output_dir
         )
+        if args.pdf:
+            generate_scientific_validation_pdf()
         if result["overall_status"] == "failed":
             raise SystemExit(1)
         return
+    if args.pdf:
+        raise ValueError("--pdf requires --scientific-validation-report.")
     if args.validation_figures:
         configure_logging("INFO")
         manifest = generate_validation_figures(
@@ -247,10 +263,18 @@ def main() -> None:
             if payload.get("execution_status") == "failed" or payload.get("benchmark_status") == "failed":
                 raise SystemExit(1)
         return
+    if args.mms_validation_2d:
+        configure_logging("INFO")
+        result = run_mms_validation_2d(base_output_dir=args.benchmark_output_dir)
+        if result["summary_path"].exists():
+            payload = json.loads(result["summary_path"].read_text(encoding="utf-8"))
+            if payload.get("status") == "failed":
+                raise SystemExit(1)
+        return
 
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, --forced-turbulence-validation-2d, --resolution-sensitivity-study-2d, or --hpc-fftw-benchmark is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, --forced-turbulence-validation-2d, --resolution-sensitivity-study-2d, --hpc-fftw-benchmark, or --mms-validation-2d is used."
         )
 
     config = load_config(args.config)
