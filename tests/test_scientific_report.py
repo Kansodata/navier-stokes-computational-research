@@ -176,3 +176,47 @@ def test_scientific_report_legacy_artifact_is_classified(tmp_path: Path) -> None
     )
     payload = json.loads(Path(result["report_json_path"]).read_text(encoding="utf-8"))
     assert "time_refinement_2d" in payload["legacy_artifacts"]
+
+
+def test_scientific_report_adds_discrepancy_analysis_for_warning_artifact(tmp_path: Path) -> None:
+    base = tmp_path / "benchmarks"
+    out = tmp_path / "reports"
+    artifact = build_validation_result(
+        validation_id="forced_turbulence_validation_2d",
+        validation_type="diagnostic",
+        status="warning",
+        claim_scope="diagnostic_only",
+        metrics={"accuracy_status": "warning"},
+        notes=["diagnostic_only"],
+    )
+    artifact["summary"] = {"warnings": ["insufficient_inertial_range_for_slope_fit"]}
+    artifact_path = (
+        base
+        / "forced_turbulence_validation_2d"
+        / "forced_turbulence_validation_summary.json"
+    )
+    _write_json(artifact_path, artifact)
+
+    result = generate_scientific_validation_report(
+        base_benchmark_dir=str(base),
+        output_dir=str(out),
+        artifact_specs=[
+            ArtifactSpec(
+                validation_id="forced_turbulence_validation_2d",
+                validation_type="diagnostic",
+                path=artifact_path,
+                critical=True,
+            )
+        ],
+    )
+
+    payload = json.loads(Path(result["report_json_path"]).read_text(encoding="utf-8"))
+    assert payload["overall_status"] == "warning"
+    assert payload["discrepancy_analysis"]
+    analysis = payload["discrepancy_analysis"][0]
+    assert analysis["external_reference"] == "kraichnan_leith_batchelor_reference_slopes_diagnostic_only"
+    assert "insufficient_inertial_range_for_slope_fit" in analysis["warning_tokens"]
+    assert "does_not_establish_formal_convergence_or_general_turbulence_validity" == analysis["claim_boundary"]
+
+    markdown = Path(result["report_markdown_path"]).read_text(encoding="utf-8")
+    assert "## Discrepancy Analysis" in markdown

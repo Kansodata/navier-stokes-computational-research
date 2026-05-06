@@ -164,6 +164,7 @@ Multi-resolution energy/enstrophy 2D harness command: `python -m navier_stokes_r
 Scientific validation consolidated report command: `python -m navier_stokes_research.cli --scientific-validation-report` -> `outputs/reports/scientific_validation_report.json` and `outputs/reports/scientific_validation_report.md` (`human_review_required` by design; not a 3D/Millennium/formal proof claim).
 Reproducible validation figures command: `python -m navier_stokes_research.cli --validation-figures` -> `outputs/figures/figures_manifest.json` and `outputs/figures/*.png` (`scientific_acceptance = human_review_required`; no 3D/Millennium/formal proof claims).
 Forced turbulence 2D diagnostic command: `python -m navier_stokes_research.cli --forced-turbulence-validation-2d` -> `outputs/benchmarks/forced_turbulence_validation_2d/forced_turbulence_validation_summary.json` (energy-budget and spectral diagnostics only; `scientific_acceptance = human_review_required`).
+Resolution sensitivity 2D diagnostic command: `python -m navier_stokes_research.cli --resolution-sensitivity-study-2d` -> `outputs/benchmarks/resolution_sensitivity_2d/resolution_sensitivity_summary.json`; extended matrix: `python scripts/resolution_sensitivity_study.py` (`64,128,256,512`; diagnostic only, no formal cascade/convergence claim).
 
 ## Spectral diagnostics
 
@@ -199,6 +200,7 @@ The optional local index is written to:
 - [docs/literature_review.md](docs/literature_review.md)
 - [docs/validation_evidence_matrix.md](docs/validation_evidence_matrix.md)
 - [docs/references.bib](docs/references.bib)
+- [SCIENCE_INTEGRITY.md](SCIENCE_INTEGRITY.md)
 
 ## How to interpret metrics
 

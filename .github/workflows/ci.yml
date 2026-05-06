@@ -62,6 +62,10 @@ jobs:
         run: |
           python -m navier_stokes_research.cli --forced-turbulence-validation-2d
 
+      - name: Run forced resolution sensitivity 2D
+        run: |
+          python -m navier_stokes_research.cli --resolution-sensitivity-study-2d
+
       - name: Fail closed on validation artifact statuses
         run: |
           python scripts/check_validation_status.py
