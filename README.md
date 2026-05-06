@@ -4,6 +4,15 @@
 
 This repository is a computational research baseline for deterministic 2D incompressible Navier-Stokes simulations on periodic domains. It does not solve the 3D Navier-Stokes Millennium problem and does not provide theorem-level mathematical claims.
 
+## Author and citation
+
+Primary author and maintainer: Marcos Contreras Fuentes, Kansodata.
+
+- ORCID: https://orcid.org/0000-0002-1858-1611
+- Citation metadata: [CITATION.cff](CITATION.cff)
+- Author metadata: [AUTHORS.md](AUTHORS.md)
+- License: GPL-3.0-only
+
 ## Problem context
 
 The implementation uses a pseudo-spectral vorticity-streamfunction method with explicit time stepping to support controlled numerical experiments, software validation, and reproducible benchmarking.
@@ -281,4 +290,4 @@ For Taylor-Green convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/external_validation_checklist_2d.md), [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/controlled_forcing_2d_design.md), [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
