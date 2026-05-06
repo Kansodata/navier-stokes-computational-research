@@ -103,10 +103,14 @@ Validation JSON schema contract and migration notes are documented in:
 Consolidated scientific validation report generation:
 
 - `python -m navier_stokes_research.cli --scientific-validation-report`
+- `python -m navier_stokes_research.cli --validation-figures`
 - Outputs:
   - `outputs/reports/scientific_validation_report.json`
   - `outputs/reports/scientific_validation_report.md`
+  - `outputs/figures/figures_manifest.json`
+  - `outputs/figures/*.png`
 - `scientific_acceptance` remains `human_review_required` by design.
+- Visual artifacts are evidence support only; they are not 3D validation, not a Millennium solution, and not formal proof.
 
 ## Convergence study protocol
 

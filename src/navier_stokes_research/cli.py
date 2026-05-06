@@ -17,6 +17,7 @@ from navier_stokes_research.scientific_report import generate_scientific_validat
 from navier_stokes_research.stress_validation import run_stress_validation_2d
 from navier_stokes_research.time_refinement import run_time_refinement_validation_2d
 from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
+from navier_stokes_research.validation_figures import generate_validation_figures
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -111,6 +112,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Generate consolidated scientific validation report JSON/Markdown from validation artifacts.",
     )
+    parser.add_argument(
+        "--validation-figures",
+        action="store_true",
+        help="Generate reproducible validation figures and figures_manifest.json.",
+    )
     return parser
 
 
@@ -173,10 +179,18 @@ def main() -> None:
         if result["overall_status"] == "failed":
             raise SystemExit(1)
         return
+    if args.validation_figures:
+        configure_logging("INFO")
+        manifest = generate_validation_figures(
+            base_benchmark_dir=args.benchmark_output_dir,
+        )
+        if manifest["summary"]["failed"] > 0:
+            raise SystemExit(1)
+        return
 
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, or --scientific-validation-report is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, or --validation-figures is used."
         )
 
     config = load_config(args.config)
