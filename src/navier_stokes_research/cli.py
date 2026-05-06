@@ -9,6 +9,7 @@ from navier_stokes_research.config import load_config
 from navier_stokes_research.convergence import run_convergence_study
 from navier_stokes_research.external_validation import run_external_reference_validation_2d
 from navier_stokes_research.forcing_validator import run_forced_turbulence_validation_2d
+from navier_stokes_research.hpc_benchmark import run_hpc_fftw_benchmark
 from navier_stokes_research.logging_utils import configure_logging
 from navier_stokes_research.multi_resolution_validation import (
     run_multi_resolution_energy_enstrophy_validation_2d,
@@ -139,6 +140,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Use the extended 64,128,256,512 matrix for --resolution-sensitivity-study-2d.",
     )
+    parser.add_argument(
+        "--hpc-fftw-benchmark",
+        action="store_true",
+        help="Run HPC infrastructure benchmark comparing baseline FFT solver and FFTW opt-in solver.",
+    )
+    parser.add_argument(
+        "--hpc-fftw-benchmark-extended",
+        action="store_true",
+        help="Run extended HPC benchmark mode with more steps (still 2D periodic infrastructure benchmark only).",
+    )
     return parser
 
 
@@ -225,10 +236,21 @@ def main() -> None:
             if payload.get("status") == "failed":
                 raise SystemExit(1)
         return
+    if args.hpc_fftw_benchmark:
+        configure_logging("INFO")
+        result = run_hpc_fftw_benchmark(
+            base_output_dir=args.benchmark_output_dir,
+            extended=args.hpc_fftw_benchmark_extended,
+        )
+        if result["summary_path"].exists():
+            payload = json.loads(result["summary_path"].read_text(encoding="utf-8"))
+            if payload.get("execution_status") == "failed" or payload.get("benchmark_status") == "failed":
+                raise SystemExit(1)
+        return
 
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, --forced-turbulence-validation-2d, or --resolution-sensitivity-study-2d is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, --forced-turbulence-validation-2d, --resolution-sensitivity-study-2d, or --hpc-fftw-benchmark is used."
         )
 
     config = load_config(args.config)

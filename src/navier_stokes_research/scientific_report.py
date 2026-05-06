@@ -74,6 +74,14 @@ def _default_artifact_specs(base_benchmark_dir: Path) -> list[ArtifactSpec]:
             / "resolution_sensitivity_summary.json",
             critical=False,
         ),
+        ArtifactSpec(
+            validation_id="hpc_fftw_benchmark",
+            validation_type="diagnostic",
+            path=base_benchmark_dir
+            / "hpc_fftw_benchmark"
+            / "hpc_fftw_benchmark_summary.json",
+            critical=False,
+        ),
     ]
 
 
