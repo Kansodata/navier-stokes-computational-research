@@ -13,6 +13,7 @@ from navier_stokes_research.multi_resolution_validation import (
 )
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.scientific_report import generate_scientific_validation_report
 from navier_stokes_research.stress_validation import run_stress_validation_2d
 from navier_stokes_research.time_refinement import run_time_refinement_validation_2d
 from navier_stokes_research.taylor_green import run_taylor_green_convergence_study, run_taylor_green_validation
@@ -105,6 +106,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run 2D multi-resolution energy/enstrophy regression harness and write multi_resolution_energy_enstrophy_summary.json.",
     )
+    parser.add_argument(
+        "--scientific-validation-report",
+        action="store_true",
+        help="Generate consolidated scientific validation report JSON/Markdown from validation artifacts.",
+    )
     return parser
 
 
@@ -159,10 +165,18 @@ def main() -> None:
             base_output_dir=args.benchmark_output_dir
         )
         return
+    if args.scientific_validation_report:
+        configure_logging("INFO")
+        result = generate_scientific_validation_report(
+            base_benchmark_dir=args.benchmark_output_dir
+        )
+        if result["overall_status"] == "failed":
+            raise SystemExit(1)
+        return
 
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, or --multi-resolution-energy-enstrophy-2d is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, or --scientific-validation-report is used."
         )
 
     config = load_config(args.config)

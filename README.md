@@ -161,6 +161,7 @@ The harness records `passed`, `warning`, `failed`, and `expected_fail_closed` ou
 External-reference 2D harness command: `python -m navier_stokes_research.cli --external-validation-2d`.
 Time-refinement 2D harness command: `python -m navier_stokes_research.cli --time-refinement-2d` -> `outputs/benchmarks/time_refinement_2d/time_refinement_summary.json`.
 Multi-resolution energy/enstrophy 2D harness command: `python -m navier_stokes_research.cli --multi-resolution-energy-enstrophy-2d` -> `outputs/benchmarks/multi_resolution_energy_enstrophy_2d/multi_resolution_energy_enstrophy_summary.json` (2D periodic diagnostic/regression only, not a formal convergence proof).
+Scientific validation consolidated report command: `python -m navier_stokes_research.cli --scientific-validation-report` -> `outputs/reports/scientific_validation_report.json` and `outputs/reports/scientific_validation_report.md` (`human_review_required` by design; not a 3D/Millennium/formal proof claim).
 
 ## Spectral diagnostics
 

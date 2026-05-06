@@ -61,3 +61,7 @@ jobs:
       - name: Fail closed on validation artifact statuses
         run: |
           python scripts/check_validation_status.py
+
+      - name: Generate consolidated scientific validation report
+        run: |
+          python -m navier_stokes_research.cli --scientific-validation-report
