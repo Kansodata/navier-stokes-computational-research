@@ -47,7 +47,8 @@ class NavierStokesSpectralSolver:
         self.inv_laplacian[mask] = 1.0 / self.laplacian[mask]
         self.dealias = dealias_mask(grid.nx, grid.ny)
         self.forcing_mask = self._build_forcing_mask()
-        self.forcing_field = self._build_deterministic_forcing_field()
+        self._forcing_rng = np.random.default_rng(self.forcing.seed)
+        self.forcing_field = self._build_initial_forcing_field()
 
     def _build_forcing_mask(self) -> np.ndarray:
         wavenumber_radius = np.sqrt(self.kx[:, None] ** 2 + self.ky[None, :] ** 2)
@@ -58,17 +59,12 @@ class NavierStokesSpectralSolver:
         )
         return mask & self.dealias
 
-    def _build_deterministic_forcing_field(self) -> np.ndarray:
-        if not self.forcing.enabled:
-            return np.zeros((self.grid.nx, self.grid.ny), dtype=float)
-        if self.forcing.forcing_type != "fourier_deterministic_narrow_band":
-            raise ValueError(f"Unsupported runtime forcing_type: {self.forcing.forcing_type}")
+    def _scaled_band_limited_random_field(self) -> np.ndarray:
         active_modes = int(np.count_nonzero(self.forcing_mask))
         if active_modes == 0:
-            raise ValueError("Deterministic Fourier forcing band contains no active de-aliased modes")
+            raise ValueError("Fourier forcing band contains no active de-aliased modes")
 
-        rng = np.random.default_rng(self.forcing.seed)
-        raw = rng.normal(size=(self.grid.nx, self.grid.ny))
+        raw = self._forcing_rng.normal(size=(self.grid.nx, self.grid.ny))
         forcing_hat = np.fft.fft2(raw)
         forcing_hat = apply_dealias(forcing_hat * self.forcing_mask, self.dealias)
         forcing_hat[0, 0] = 0.0
@@ -76,10 +72,35 @@ class NavierStokesSpectralSolver:
         forcing -= float(np.mean(forcing))
         rms = float(np.sqrt(np.mean(forcing**2)))
         if not np.isfinite(rms) or rms <= 0.0:
-            raise ValueError("Deterministic Fourier forcing generated zero or non-finite RMS")
+            raise ValueError("Fourier forcing generated zero or non-finite RMS")
         forcing *= self.forcing.target_energy_input_rate / rms
-        assert_finite("deterministic_forcing", forcing)
+        assert_finite("fourier_forcing_sample", forcing)
         return forcing
+
+    def _build_initial_forcing_field(self) -> np.ndarray:
+        if not self.forcing.enabled:
+            return np.zeros((self.grid.nx, self.grid.ny), dtype=float)
+        if self.forcing.forcing_type not in {
+            "fourier_deterministic_narrow_band",
+            "fourier_ou_narrow_band",
+        }:
+            raise ValueError(f"Unsupported runtime forcing_type: {self.forcing.forcing_type}")
+        return self._scaled_band_limited_random_field()
+
+    def _advance_forcing_state(self) -> None:
+        if not self.forcing.enabled or self.forcing.forcing_type != "fourier_ou_narrow_band":
+            return
+        decay = float(np.exp(-self.time.dt / self.forcing.ou_correlation_time))
+        innovation_scale = self.forcing.ou_noise_amplitude * float(np.sqrt(max(0.0, 1.0 - decay**2)))
+        innovation = self._scaled_band_limited_random_field()
+        next_forcing = decay * self.forcing_field + innovation_scale * innovation
+        next_forcing -= float(np.mean(next_forcing))
+        rms = float(np.sqrt(np.mean(next_forcing**2)))
+        if not np.isfinite(rms) or rms <= 0.0:
+            raise ValueError("OU Fourier forcing generated zero or non-finite RMS")
+        next_forcing *= self.forcing.target_energy_input_rate / rms
+        assert_finite("ou_forcing_state", next_forcing)
+        self.forcing_field = next_forcing
 
     def solve_streamfunction(self, vorticity: np.ndarray) -> np.ndarray:
         vorticity_hat = np.fft.fft2(vorticity)
@@ -161,4 +182,5 @@ class NavierStokesSpectralSolver:
         updated = vorticity + 0.5 * self.time.dt * (k1 + k2)
         assert_finite("vorticity", updated)
         state = self.ensure_stability(updated)
+        self._advance_forcing_state()
         return updated, state
