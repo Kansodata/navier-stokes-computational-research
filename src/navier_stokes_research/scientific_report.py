@@ -66,6 +66,14 @@ def _default_artifact_specs(base_benchmark_dir: Path) -> list[ArtifactSpec]:
             / "forced_turbulence_validation_2d"
             / "forced_turbulence_validation_summary.json",
         ),
+        ArtifactSpec(
+            validation_id="resolution_sensitivity_2d",
+            validation_type="diagnostic",
+            path=base_benchmark_dir
+            / "resolution_sensitivity_2d"
+            / "resolution_sensitivity_summary.json",
+            critical=False,
+        ),
     ]
 
 
@@ -215,6 +223,95 @@ def _build_md_table_rows(items: list[dict[str, Any]]) -> list[str]:
     return rows
 
 
+def _warning_tokens(payload: dict[str, Any]) -> list[str]:
+    tokens: list[str] = []
+    warnings = payload.get("warnings", [])
+    if isinstance(warnings, list):
+        tokens.extend(str(item) for item in warnings)
+    summary = payload.get("summary", {})
+    if isinstance(summary, dict):
+        summary_warnings = summary.get("warnings", [])
+        if isinstance(summary_warnings, list):
+            tokens.extend(str(item) for item in summary_warnings)
+    return sorted(set(tokens))
+
+
+def _build_discrepancy_analysis(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    analysis: list[dict[str, Any]] = []
+    for item in items:
+        if item.get("status") != "warning":
+            continue
+        path = Path(str(item.get("path", "")))
+        payload: dict[str, Any] = {}
+        if path.exists():
+            try:
+                payload = _load_json(path)
+            except Exception:  # noqa: BLE001
+                payload = {}
+        validation_id = str(item["validation_id"])
+        likely_causes = [
+            "warning_status_requires_human_review",
+            "diagnostic_evidence_is_not_formal_acceptance",
+        ]
+        recommended_actions = [
+            "inspect_artifact_metrics_before_using_results",
+            "keep_scientific_acceptance_as_human_review_required",
+        ]
+        external_reference = "not_applicable"
+        if validation_id in {"forced_turbulence_validation_2d", "resolution_sensitivity_2d"}:
+            external_reference = "kraichnan_leith_batchelor_reference_slopes_diagnostic_only"
+            likely_causes.extend(
+                [
+                    "finite_resolution_may_limit_inertial_range",
+                    "short_integration_window_may_limit_statistical_stationarity",
+                    "forcing_and_dissipation_ranges_may_not_be_well_separated",
+                    "two_thirds_dealias_cutoff_limits_high_wavenumber_fit_range",
+                ]
+            )
+            recommended_actions.extend(
+                [
+                    "run_resolution_sensitivity_matrix_before_escalating_spectral_claims",
+                    "treat_k_minus_5_over_3_and_k_minus_3_slopes_as_reference_diagnostics_only",
+                ]
+            )
+        analysis.append(
+            {
+                "validation_id": validation_id,
+                "status": "warning",
+                "external_reference": external_reference,
+                "warning_tokens": _warning_tokens(payload),
+                "likely_causes": likely_causes,
+                "recommended_actions": recommended_actions,
+                "claim_boundary": "does_not_establish_formal_convergence_or_general_turbulence_validity",
+            }
+        )
+    return analysis
+
+
+def _build_discrepancy_markdown(analysis: list[dict[str, Any]]) -> list[str]:
+    if not analysis:
+        return ["No warning-status discrepancy analysis required."]
+    rows = [
+        "| validation_id | reference context | warning tokens | recommended actions | claim boundary |",
+        "|---|---|---|---|---|",
+    ]
+    for item in analysis:
+        rows.append(
+            "| "
+            + " | ".join(
+                [
+                    str(item["validation_id"]),
+                    str(item["external_reference"]),
+                    ",".join(item.get("warning_tokens", [])) or "none",
+                    ",".join(item.get("recommended_actions", [])),
+                    str(item["claim_boundary"]),
+                ]
+            )
+            + " |"
+        )
+    return rows
+
+
 def generate_scientific_validation_report(
     *,
     base_benchmark_dir: str = "outputs/benchmarks",
@@ -357,6 +454,8 @@ def generate_scientific_validation_report(
     else:
         overall_status = "passed"
 
+    discrepancy_analysis = _build_discrepancy_analysis(all_items)
+
     figures_section: dict[str, Any] = {
         "manifest": figures_manifest_path,
         "status": "missing",
@@ -408,6 +507,7 @@ def generate_scientific_validation_report(
         "legacy_artifacts": [item["validation_id"] for item in sections["legacy"]],
         "missing_artifacts": [item["validation_id"] for item in sections["missing"]],
         "failed_or_warning_artifacts": sorted(set(failed_or_warning_artifacts)),
+        "discrepancy_analysis": discrepancy_analysis,
         "evidence_summary": [
             "This report consolidates deterministic 2D periodic validation artifacts.",
             "Verification, validation, and diagnostic evidence are separated explicitly.",
@@ -468,6 +568,9 @@ def generate_scientific_validation_report(
         f"- Generated: {', '.join(figures_section['generated']) if figures_section['generated'] else 'none'}",
         f"- Skipped: {', '.join(figures_section['skipped']) if figures_section['skipped'] else 'none'}",
         f"- Failed: {', '.join(figures_section['failed']) if figures_section['failed'] else 'none'}",
+        "",
+        "## Discrepancy Analysis",
+        *_build_discrepancy_markdown(discrepancy_analysis),
         "",
         "## Scientific Limitations",
         "- 2D periodic only.",

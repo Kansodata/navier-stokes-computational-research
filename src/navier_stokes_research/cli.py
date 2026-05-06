@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import replace
 
 from navier_stokes_research.benchmark import run_benchmark
@@ -14,6 +15,11 @@ from navier_stokes_research.multi_resolution_validation import (
 )
 from navier_stokes_research.physical_decay import run_physical_decay_validation
 from navier_stokes_research.runner import run_simulation
+from navier_stokes_research.resolution_sensitivity_study import (
+    DEFAULT_RESOLUTIONS,
+    EXTENDED_RESOLUTIONS,
+    run_resolution_sensitivity_study_2d,
+)
 from navier_stokes_research.scientific_report import generate_scientific_validation_report
 from navier_stokes_research.stress_validation import run_stress_validation_2d
 from navier_stokes_research.time_refinement import run_time_refinement_validation_2d
@@ -123,6 +129,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run controlled 2D forced-turbulence diagnostics and write forced_turbulence_validation_summary.json.",
     )
+    parser.add_argument(
+        "--resolution-sensitivity-study-2d",
+        action="store_true",
+        help="Run controlled 2D forced-resolution sensitivity diagnostics and write resolution_sensitivity_summary.json.",
+    )
+    parser.add_argument(
+        "--resolution-sensitivity-extended",
+        action="store_true",
+        help="Use the extended 64,128,256,512 matrix for --resolution-sensitivity-study-2d.",
+    )
     return parser
 
 
@@ -197,10 +213,22 @@ def main() -> None:
         configure_logging("INFO")
         run_forced_turbulence_validation_2d(base_output_dir=args.benchmark_output_dir)
         return
+    if args.resolution_sensitivity_study_2d:
+        configure_logging("INFO")
+        result = run_resolution_sensitivity_study_2d(
+            base_output_dir=args.benchmark_output_dir,
+            resolutions=EXTENDED_RESOLUTIONS if args.resolution_sensitivity_extended else DEFAULT_RESOLUTIONS,
+        )
+        if result["summary_path"].exists():
+            # Warnings remain valid diagnostic output; explicit failed runs are not acceptable.
+            payload = json.loads(result["summary_path"].read_text(encoding="utf-8"))
+            if payload.get("status") == "failed":
+                raise SystemExit(1)
+        return
 
     if not args.config:
         raise ValueError(
-            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, or --forced-turbulence-validation-2d is used."
+            "--config is required unless --benchmark, --convergence-study, --taylor-green-validation, --taylor-green-convergence, --physical-decay-validation, --stress-validation-2d, --external-validation-2d, --time-refinement-2d, --multi-resolution-energy-enstrophy-2d, --scientific-validation-report, --validation-figures, --forced-turbulence-validation-2d, or --resolution-sensitivity-study-2d is used."
         )
 
     config = load_config(args.config)

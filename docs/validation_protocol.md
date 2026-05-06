@@ -105,15 +105,19 @@ Consolidated scientific validation report generation:
 - `python -m navier_stokes_research.cli --scientific-validation-report`
 - `python -m navier_stokes_research.cli --validation-figures`
 - `python -m navier_stokes_research.cli --forced-turbulence-validation-2d`
+- `python -m navier_stokes_research.cli --resolution-sensitivity-study-2d`
+- `python scripts/resolution_sensitivity_study.py` for the extended `64,128,256,512` forced-resolution matrix.
 - Outputs:
   - `outputs/reports/scientific_validation_report.json`
   - `outputs/reports/scientific_validation_report.md`
   - `outputs/figures/figures_manifest.json`
   - `outputs/figures/*.png`
   - `outputs/benchmarks/forced_turbulence_validation_2d/forced_turbulence_validation_summary.json`
+  - `outputs/benchmarks/resolution_sensitivity_2d/resolution_sensitivity_summary.json`
 - `scientific_acceptance` remains `human_review_required` by design.
 - Visual artifacts are evidence support only; they are not 3D validation, not a Millennium solution, and not formal proof.
 - Forced turbulence budget and spectral outputs are diagnostic-only until scientific review.
+- Resolution sensitivity output explains spectral slope warnings and 2/3 de-alias cutoff limits; it is not a formal cascade or convergence proof.
 
 ## Convergence study protocol
 
