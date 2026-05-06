@@ -59,6 +59,13 @@ def _default_artifact_specs(base_benchmark_dir: Path) -> list[ArtifactSpec]:
             / "multi_resolution_energy_enstrophy_2d"
             / "multi_resolution_energy_enstrophy_summary.json",
         ),
+        ArtifactSpec(
+            validation_id="forced_turbulence_validation_2d",
+            validation_type="diagnostic",
+            path=base_benchmark_dir
+            / "forced_turbulence_validation_2d"
+            / "forced_turbulence_validation_summary.json",
+        ),
     ]
 
 
