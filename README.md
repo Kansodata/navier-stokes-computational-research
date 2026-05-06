@@ -26,6 +26,7 @@ The implementation uses a pseudo-spectral vorticity-streamfunction method with e
 - Provides a reproducible benchmark command and artifact set.
 - Provides a reproducible convergence study harness.
 - Provides Taylor-Green 2D analytical validation and multi-resolution error diagnostics.
+- Provides periodic MMS 2D RHS consistency validation for the vorticity-streamfunction operator.
 - Provides a controlled 2D stress validation harness.
 - Produces local static HTML reports in Spanish by default.
 - Writes automatic quality interpretation JSON files for benchmark and convergence runs.
@@ -143,6 +144,22 @@ This command runs the controlled analytical Taylor-Green case across the default
 
 This harness compares numerical velocity fields against the analytical 2D Taylor-Green velocity solution. When errors reach the configured roundoff floor, convergence-order estimates are intentionally omitted to avoid reporting numerical-noise artifacts. A `formal_error_convergence` value of `passed_roundoff_floor` means the controlled 2D analytical case matched to machine precision under the configured tolerances.
 
+## Run MMS 2D validation
+
+```bash
+python -m navier_stokes_research.cli --mms-validation-2d
+```
+
+This command verifies pseudo-spectral RHS consistency for:
+
+- `omega_t + u·grad(omega) = nu Delta(omega) + f_mms`
+
+using a smooth periodic manufactured 2D solution and writes:
+
+- `outputs/benchmarks/mms_validation_2d/mms_validation_summary.json`
+
+The artifact is scoped to 2D periodic incompressible Navier-Stokes only and keeps `scientific_acceptance=human_review_required` by design.
+
 ## Run physical decay validation
 
 ```bash
@@ -171,10 +188,12 @@ External-reference 2D harness command: `python -m navier_stokes_research.cli --e
 Time-refinement 2D harness command: `python -m navier_stokes_research.cli --time-refinement-2d` -> `outputs/benchmarks/time_refinement_2d/time_refinement_summary.json`.
 Multi-resolution energy/enstrophy 2D harness command: `python -m navier_stokes_research.cli --multi-resolution-energy-enstrophy-2d` -> `outputs/benchmarks/multi_resolution_energy_enstrophy_2d/multi_resolution_energy_enstrophy_summary.json` (2D periodic diagnostic/regression only, not a formal convergence proof).
 Scientific validation consolidated report command: `python -m navier_stokes_research.cli --scientific-validation-report` -> `outputs/reports/scientific_validation_report.json` and `outputs/reports/scientific_validation_report.md` (`human_review_required` by design; not a 3D/Millennium/formal proof claim).
+Scientific validation consolidated PDF command: `python -m navier_stokes_research.cli --scientific-validation-report --pdf` -> `outputs/reports/scientific_validation_report.pdf` (generated from consolidated report; fail-closed when critical evidence produces overall `failed` status).
 Reproducible validation figures command: `python -m navier_stokes_research.cli --validation-figures` -> `outputs/figures/figures_manifest.json` and `outputs/figures/*.png` (`scientific_acceptance = human_review_required`; no 3D/Millennium/formal proof claims).
 Forced turbulence 2D diagnostic command: `python -m navier_stokes_research.cli --forced-turbulence-validation-2d` -> `outputs/benchmarks/forced_turbulence_validation_2d/forced_turbulence_validation_summary.json` (energy-budget and spectral diagnostics only; `scientific_acceptance = human_review_required`).
 Resolution sensitivity 2D diagnostic command: `python -m navier_stokes_research.cli --resolution-sensitivity-study-2d` -> `outputs/benchmarks/resolution_sensitivity_2d/resolution_sensitivity_summary.json`; extended matrix: `python scripts/resolution_sensitivity_study.py` (`64,128,256,512`; diagnostic only, no formal cascade/convergence claim).
 HPC infrastructure benchmark command: `python -m navier_stokes_research.cli --hpc-fftw-benchmark` -> `outputs/benchmarks/hpc_fftw_benchmark/hpc_fftw_benchmark_summary.json` (baseline-vs-FFTW runtime/operational comparison only; no new physical validation claim).
+MMS 2D RHS consistency command: `python -m navier_stokes_research.cli --mms-validation-2d` -> `outputs/benchmarks/mms_validation_2d/mms_validation_summary.json` (controlled 2D manufactured-solution check only; not a 3D result and not a formal proof).
 HPC 512 solver design note: [docs/spectral_solver_512_hpc.md](docs/spectral_solver_512_hpc.md). `SpectralSolver512` is opt-in 2D periodic infrastructure; it is not a replacement for validated claims.
 
 ## Spectral diagnostics
@@ -266,6 +285,7 @@ For Taylor-Green convergence outputs:
 - `src/navier_stokes_research/benchmark.py`: reproducible benchmark configuration and run.
 - `src/navier_stokes_research/convergence.py`: reproducible convergence-study harness.
 - `src/navier_stokes_research/taylor_green.py`: controlled Taylor-Green analytical validation and convergence harness.
+- `src/navier_stokes_research/mms_validation.py`: controlled periodic MMS 2D RHS consistency harness.
 - `src/navier_stokes_research/stress_validation.py`: controlled 2D stress validation harness.
 - `src/navier_stokes_research/interpretation.py`: heuristic quality interpretation.
 - `src/navier_stokes_research/runner.py`: simulation orchestration.
@@ -282,6 +302,7 @@ For Taylor-Green convergence outputs:
 - Convergence harness is a baseline consistency study, not a formal convergence proof.
 - Quality thresholds are heuristic review aids, not mathematical criteria.
 - Taylor-Green validation is a controlled 2D case and does not prove global existence/smoothness for 3D Navier-Stokes.
+- MMS validation is a controlled manufactured 2D consistency check and does not prove global existence/smoothness for 3D Navier-Stokes.
 - Stress validation is an engineering robustness diagnostic, not a solver proof.
 - Near-floor error saturation in Taylor-Green convergence diagnostics indicates roundoff-limited behavior, not a standalone formal convergence proof.
 
@@ -292,4 +313,4 @@ For Taylor-Green convergence outputs:
 3. Extended diagnostics and uncertainty quantification.
 4. Optional alternative discretizations behind stable interfaces.
 
-See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/controlled_forcing_2d_design.md), [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).
+See [docs/research_notes.md](docs/research_notes.md), [docs/validation_protocol.md](docs/validation_protocol.md), [docs/convergence_study.md](docs/convergence_study.md), [docs/reports.md](docs/reports.md), [docs/quality_interpretation.md](docs/quality_interpretation.md), [docs/advocatus_diaboli_taylor_green.md](docs/advocatus_diaboli_taylor_green.md), [docs/physical_decay_validation.md](docs/physical_decay_validation.md), [docs/spectral_diagnostics.md](docs/spectral_diagnostics.md), [docs/stress_validation_2d.md](docs/stress_validation_2d.md), [docs/external_validation_checklist_2d.md](docs/controlled_forcing_2d_design.md), [docs/controlled_forcing_2d_design.md](docs/controlled_forcing_2d_design.md), [docs/agents/kansodata-reproducibility-and-ci-auditor.md](docs/agents/kansodata-reproducibility-and-ci-auditor.md), [docs/agents/kansodata-numerical-methods-auditor.md](docs/agents/kansodata-numerical-methods-auditor.md), [docs/agents/kansodata-physical-validator.md](docs/agents/kansodata-physical-validator.md), [docs/agents/kansodata-advocatus-diaboli.md](docs/agents/kansodata-advocatus-diaboli.md), and [docs/agents/kansodata-chief-scientific-reviewer.md](docs/agents/kansodata-chief-scientific-reviewer.md). See also [docs/agents/scientific_validation_pipeline.md](docs/agents/scientific_validation_pipeline.md).

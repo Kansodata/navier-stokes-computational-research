@@ -6,6 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
 from navier_stokes_research.validation_schema import (
     ALLOWED_STATUSES,
     ALLOWED_VALIDATION_TYPES,
@@ -606,3 +612,132 @@ def generate_scientific_validation_report(
         "report_markdown_path": report_md_path,
         "overall_status": overall_status,
     }
+
+
+def _table_lines(items: list[dict[str, Any]]) -> list[str]:
+    lines = ["validation_id | type | status | schema | path"]
+    for item in items:
+        lines.append(
+            f"{item.get('validation_id', 'unknown')} | "
+            f"{item.get('validation_type', 'unknown')} | "
+            f"{item.get('status', 'unknown')} | "
+            f"{item.get('schema', 'unknown')} | "
+            f"{item.get('path', 'unknown')}"
+        )
+    return lines
+
+
+def _text_page(pdf: PdfPages, title: str, lines: list[str], fontsize: int = 10) -> None:
+    fig, ax = plt.subplots(figsize=(8.27, 11.69))
+    ax.axis("off")
+    fig.text(0.07, 0.965, title, fontsize=14, fontweight="bold", va="top")
+    y = 0.93
+    for line in lines:
+        fig.text(0.07, y, line, fontsize=fontsize, va="top", family="monospace")
+        y -= 0.026
+        if y < 0.05:
+            pdf.savefig(fig, bbox_inches="tight")
+            plt.close(fig)
+            fig, ax = plt.subplots(figsize=(8.27, 11.69))
+            ax.axis("off")
+            fig.text(0.07, 0.965, f"{title} (cont.)", fontsize=14, fontweight="bold", va="top")
+            y = 0.93
+    pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
+def generate_scientific_validation_pdf(
+    *,
+    report_json_path: str = "outputs/reports/scientific_validation_report.json",
+    output_pdf_path: str = "outputs/reports/scientific_validation_report.pdf",
+    fail_closed_on_failed: bool = True,
+) -> Path:
+    payload = _load_json(Path(report_json_path))
+    overall_status = str(payload.get("overall_status", "failed"))
+    if fail_closed_on_failed and overall_status == "failed":
+        raise RuntimeError(
+            "Fail-closed: scientific_validation_report overall_status is failed; PDF not generated."
+        )
+
+    generated_at = str(payload.get("generated_at_utc", _utc_now()))
+    summary = payload.get("summary", {})
+    sections = payload.get("sections", {})
+    figures = payload.get("figures", {})
+    discrepancy = payload.get("discrepancy_analysis", [])
+    limitations = payload.get("scientific_limitations", [])
+    evidence = payload.get("evidence_summary", [])
+    claim_policy = payload.get("claim_policy", {})
+
+    output_path = Path(output_pdf_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    all_items: list[dict[str, Any]] = []
+    for key in ("verification", "validation", "diagnostic", "missing", "invalid"):
+        rows = sections.get(key, [])
+        if isinstance(rows, list):
+            all_items.extend([row for row in rows if isinstance(row, dict)])
+
+    table_lines = _table_lines(all_items) if all_items else ["No artifacts found."]
+    artifact_refs = [
+        f"JSON report: {report_json_path}",
+        f"Markdown report: {str(payload.get('artifacts', {}).get('markdown_report', 'unknown'))}",
+        f"Figures manifest: {str(figures.get('manifest', 'unknown'))}",
+    ]
+
+    with PdfPages(output_path) as pdf:
+        _text_page(
+            pdf,
+            "Scientific Validation Report (PDF)",
+            [
+                f"Generated at (UTC): {generated_at}",
+                "",
+                "Executive summary",
+                "Consolidated 2D periodic validation evidence for human scientific review.",
+                f"Overall validation status: {overall_status}",
+                f"Scientific acceptance: {payload.get('scientific_acceptance', 'human_review_required')}",
+                "",
+                "Interpretive note",
+                "Conservative interpretation only. Diagnostic and warning states require human review.",
+                "No automatic scientific claim escalation is allowed from this document alone.",
+            ],
+        )
+        _text_page(
+            pdf,
+            "Validation Summary and Artifacts",
+            [
+                f"Counts: {summary}",
+                "",
+                "Validation/artifact table",
+                *table_lines,
+            ],
+            fontsize=8,
+        )
+        _text_page(
+            pdf,
+            "Conservative Analysis, Warnings, and Gaps",
+            [
+                "Evidence summary",
+                *([str(item) for item in evidence] if isinstance(evidence, list) else ["none"]),
+                "",
+                "Discrepancy analysis (warnings/gaps)",
+                *([json.dumps(item, ensure_ascii=True) for item in discrepancy] if isinstance(discrepancy, list) and discrepancy else ["none"]),
+                "",
+                "Explicit limitations",
+                "- 2D periodic baseline only",
+                "- no 3D Navier-Stokes solution claim",
+                "- no Millennium Problem claim",
+                "- no mathematical proof claim",
+                "- human review required when applicable",
+                "",
+                "Policy flags",
+                f"{claim_policy}",
+                "",
+                "Scientific limitations tokens",
+                *([str(item) for item in limitations] if isinstance(limitations, list) else ["none"]),
+                "",
+                "Artifact paths",
+                *artifact_refs,
+            ],
+            fontsize=9,
+        )
+    return output_path
