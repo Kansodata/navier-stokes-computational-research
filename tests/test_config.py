@@ -43,13 +43,29 @@ def test_forcing_config_accepts_enabled_deterministic_narrow_band() -> None:
     assert forcing.forcing_type == "fourier_deterministic_narrow_band"
 
 
+def test_forcing_config_accepts_enabled_ou_narrow_band() -> None:
+    forcing = ForcingConfig(
+        enabled=True,
+        forcing_type="fourier_ou_narrow_band",
+        k_min=2.0,
+        k_max=4.0,
+        target_energy_input_rate=0.01,
+        ou_correlation_time=0.5,
+        ou_noise_amplitude=1.0,
+        ekman_drag=0.1,
+    )
+
+    assert forcing.enabled is True
+    assert forcing.forcing_type == "fourier_ou_narrow_band"
+
+
 def test_forcing_config_rejects_enabled_without_implemented_type() -> None:
     with pytest.raises(ValueError, match="must use an implemented forcing_type"):
         ForcingConfig(enabled=True)
 
 
-def test_forcing_config_rejects_ou_until_runtime_support_exists() -> None:
-    with pytest.raises(ValueError, match="Ornstein-Uhlenbeck forcing is not implemented"):
+def test_forcing_config_rejects_ou_without_positive_noise_amplitude() -> None:
+    with pytest.raises(ValueError, match="ou_noise_amplitude > 0"):
         ForcingConfig(
             enabled=True,
             forcing_type="fourier_ou_narrow_band",
