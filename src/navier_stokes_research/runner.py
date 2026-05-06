@@ -50,6 +50,7 @@ def run_simulation(config: SimulationConfig, validate: bool = False) -> dict[str
         grid=config.grid,
         physics=config.physics,
         time=config.time,
+        forcing=config.forcing,
     )
     vorticity = create_initial_vorticity(config.initial_condition, config.grid)
     metrics: list[dict[str, float]] = []
