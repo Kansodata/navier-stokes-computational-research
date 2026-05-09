@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Baseline 2D periodic pseudo-spectral Navier-Stokes solver.
+
+The solver uses the vorticity-streamfunction formulation on a periodic Fourier
+grid. It exposes stability checks, velocity recovery, streamfunction recovery,
+and a second-order predictor-corrector time step. The implementation remains
+limited to the 2D computational model validated elsewhere in the repository.
+"""
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -17,6 +25,8 @@ from navier_stokes_research.solver.numerics import (
 
 @dataclass(frozen=True)
 class StabilityState:
+    """Computed CFL, diffusion, and speed diagnostics for one solver state."""
+
     cfl_number: float
     diffusion_number: float
     max_speed: float
@@ -103,6 +113,8 @@ class NavierStokesSpectralSolver:
         self.forcing_field = next_forcing
 
     def solve_streamfunction(self, vorticity: np.ndarray) -> np.ndarray:
+        """Recover the zero-mean streamfunction from a real vorticity field."""
+
         vorticity_hat = np.fft.fft2(vorticity)
         psi_hat = -self.inv_laplacian * vorticity_hat
         psi_hat[0, 0] = 0.0
@@ -120,9 +132,13 @@ class NavierStokesSpectralSolver:
         return u, v
 
     def velocity_from_vorticity(self, vorticity: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Recover the incompressible velocity components from vorticity."""
+
         return self._velocity_from_vorticity_hat(np.fft.fft2(vorticity))
 
     def compute_stability(self, vorticity: np.ndarray) -> StabilityState:
+        """Compute CFL and diffusion diagnostics without mutating solver state."""
+
         u, v = self.velocity_from_vorticity(vorticity)
         max_speed = float(np.max(np.sqrt(u**2 + v**2)))
         cfl_number = self.time.dt * max_speed / min(self.dx, self.dy)
@@ -138,6 +154,8 @@ class NavierStokesSpectralSolver:
         )
 
     def ensure_stability(self, vorticity: np.ndarray) -> StabilityState:
+        """Return stability diagnostics or fail closed on configured limits."""
+
         state = self.compute_stability(vorticity)
         if state.cfl_number > self.time.cfl_safety:
             raise ValueError(
@@ -174,6 +192,12 @@ class NavierStokesSpectralSolver:
         return rhs
 
     def step(self, vorticity: np.ndarray) -> tuple[np.ndarray, StabilityState]:
+        """Advance vorticity by one predictor-corrector time step.
+
+        The method validates stability before and after the update and advances
+        the forcing state after a finite, stable vorticity field is produced.
+        """
+
         self.ensure_stability(vorticity)
         k1 = self._rhs(vorticity)
         predictor = vorticity + self.time.dt * k1
