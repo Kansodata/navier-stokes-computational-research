@@ -47,3 +47,28 @@ def test_checker_hpc_benchmark_fail_closed_status(tmp_path: Path) -> None:
     )
     with pytest.raises(RuntimeError, match="Fail-closed status"):
         checker._check_hpc_fftw_benchmark()
+
+
+def test_checker_mms_validation_fail_closed_status(tmp_path: Path) -> None:
+    checker = _load_checker_module()
+    checker.ROOT = tmp_path / "outputs" / "benchmarks"
+    artifact_dir = checker.ROOT / "mms_validation_2d"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": "1.0",
+        "validation_name": "mms_validation_2d",
+        "scientific_scope": "2d_incompressible_periodic_navier_stokes_only",
+        "scientific_acceptance": "human_review_required",
+        "status": "failed",
+        "max_absolute_error": 1.0,
+        "l2_relative_error": 1.0,
+        "resolution": 64,
+        "viscosity": 1e-3,
+        "limitations": ["test"],
+    }
+    (artifact_dir / "mms_validation_summary.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+    with pytest.raises(RuntimeError, match="Fail-closed status"):
+        checker._check_mms_validation_2d()

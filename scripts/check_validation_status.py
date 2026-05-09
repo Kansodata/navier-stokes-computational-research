@@ -386,6 +386,52 @@ def _check_hpc_fftw_benchmark() -> None:
     )
 
 
+def _check_mms_validation_2d() -> None:
+    payload = _load_json(ROOT / "mms_validation_2d" / "mms_validation_summary.json")
+    if _require_field(payload, "schema_version", "mms_validation_2d") != "1.0":
+        raise RuntimeError("mms_validation_2d.schema_version must be '1.0'.")
+    if _require_field(payload, "validation_name", "mms_validation_2d") != "mms_validation_2d":
+        raise RuntimeError("mms_validation_2d.validation_name must be 'mms_validation_2d'.")
+    if (
+        _require_field(payload, "scientific_scope", "mms_validation_2d")
+        != "2d_incompressible_periodic_navier_stokes_only"
+    ):
+        raise RuntimeError(
+            "mms_validation_2d.scientific_scope must be "
+            "'2d_incompressible_periodic_navier_stokes_only'."
+        )
+    if (
+        _require_field(payload, "scientific_acceptance", "mms_validation_2d")
+        != "human_review_required"
+    ):
+        raise RuntimeError(
+            "mms_validation_2d.scientific_acceptance must be human_review_required."
+        )
+    _assert_status_not_failed(
+        _require_field(payload, "status", "mms_validation_2d"),
+        "mms_validation_2d.status",
+    )
+    _assert_finite_number(
+        _require_field(payload, "max_absolute_error", "mms_validation_2d"),
+        "mms_validation_2d.max_absolute_error",
+    )
+    _assert_finite_number(
+        _require_field(payload, "l2_relative_error", "mms_validation_2d"),
+        "mms_validation_2d.l2_relative_error",
+    )
+    _assert_finite_number(
+        _require_field(payload, "resolution", "mms_validation_2d"),
+        "mms_validation_2d.resolution",
+    )
+    _assert_finite_number(
+        _require_field(payload, "viscosity", "mms_validation_2d"),
+        "mms_validation_2d.viscosity",
+    )
+    limitations = _require_field(payload, "limitations", "mms_validation_2d")
+    if not isinstance(limitations, list) or not limitations:
+        raise RuntimeError("mms_validation_2d.limitations must be a non-empty list.")
+
+
 def main() -> None:
     _check_taylor_green()
     _check_taylor_green_convergence()
@@ -395,6 +441,7 @@ def main() -> None:
     _check_multi_resolution_energy_enstrophy()
     _check_forced_turbulence_validation()
     _check_hpc_fftw_benchmark()
+    _check_mms_validation_2d()
     print("Validation artifact status check passed.")
 
 
