@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""High-throughput 512x512 variant of the 2D periodic spectral solver.
+
+This module contains an opt-in pyFFTW implementation for larger controlled 2D
+periodic vorticity-streamfunction experiments. It preserves the repository's
+scientific boundary: computational diagnostics for the 2D periodic model only,
+not a 3D result, not a Millennium Problem claim, and not a mathematical proof.
+"""
+
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -10,6 +18,8 @@ import pyfftw
 
 @dataclass(frozen=True)
 class SpectralAuditSample:
+    """Serializable diagnostics captured during a 512x512 solver run."""
+
     step: int
     time: float
     energy: float
@@ -127,6 +137,8 @@ class SpectralSolver512:
         )
 
     def set_vorticity(self, vorticity: np.ndarray) -> None:
+        """Initialize the state from a 512x512 vorticity field and record diagnostics."""
+
         if vorticity.shape != (self.nx, self.ny):
             raise ValueError("vorticity must have shape (512, 512).")
         np.copyto(self.omega, vorticity, casting="safe")
@@ -199,6 +211,8 @@ class SpectralSolver512:
         self._assert_finite("rhs", out)
 
     def step(self) -> SpectralAuditSample | None:
+        """Advance the 512x512 state by one RK4 step with fail-closed checks."""
+
         if self.initial_enstrophy is None:
             raise RuntimeError("set_vorticity() must be called before step().")
         self._validate_cfl()
@@ -235,11 +249,15 @@ class SpectralSolver512:
         return self._record_audit_sample(force_spectrum=False)
 
     def run(self, steps: int) -> list[SpectralAuditSample]:
+        """Run multiple RK4 steps and return accumulated audit samples."""
+
         for _ in range(int(steps)):
             self.step()
         return self.audit_log
 
     def velocity(self, omega: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
+        """Recover velocity components from the current or supplied vorticity field."""
+
         source = self.omega if omega is None else omega
         self._fft2_real(source, self.omega_hat)
         self._dealias_inplace(self.omega_hat)
@@ -250,14 +268,20 @@ class SpectralSolver512:
         return self.u, self.v
 
     def energy(self, omega: np.ndarray | None = None) -> float:
+        """Compute kinetic energy for the current or supplied vorticity field."""
+
         u, v = self.velocity(omega)
         return float(0.5 * np.sum(u * u + v * v) * self.cell_area)
 
     def enstrophy(self, omega: np.ndarray | None = None) -> float:
+        """Compute enstrophy for the current or supplied vorticity field."""
+
         source = self.omega if omega is None else omega
         return float(0.5 * np.sum(source * source) * self.cell_area)
 
     def energy_spectrum(self) -> dict[str, list[float]]:
+        """Return a radial kinetic-energy spectrum diagnostic."""
+
         u, v = self.velocity()
         self._fft2_real(u, self.omega_hat)
         self._fft2_real(v, self.work_hat)
@@ -329,6 +353,8 @@ class SpectralSolver512:
             raise FloatingPointError(f"{name} contains NaN or Inf values.")
 
     def diagnostic_state(self) -> dict[str, Any]:
+        """Return solver metadata and explicit scientific limitation flags."""
+
         return {
             "solver": "SpectralSolver512",
             "scope": "2d_incompressible_periodic_pseudo_spectral",
