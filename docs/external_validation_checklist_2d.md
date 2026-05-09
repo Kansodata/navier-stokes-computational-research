@@ -7,6 +7,7 @@ Use this checklist before claiming external validation progress for the current 
 - [x] Periodic domain
 - [x] Pseudo-spectral discretization
 - [x] Vorticity-streamfunction formulation
+- [x] External scientific validation protocol exists: `docs/external_scientific_validation_protocol_2d.md`
 
 ## 2) Applicable external references (max 3)
 - [ ] Taylor-Green vortex 2D analytical reference is explicitly cited and matched
