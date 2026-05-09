@@ -229,6 +229,7 @@ The optional local index is written to:
 
 - [docs/literature_review.md](docs/literature_review.md)
 - [docs/validation_evidence_matrix.md](docs/validation_evidence_matrix.md)
+- [docs/external_scientific_validation_protocol_2d.md](docs/external_scientific_validation_protocol_2d.md)
 - [docs/references.bib](docs/references.bib)
 - [SCIENCE_INTEGRITY.md](SCIENCE_INTEGRITY.md)
 

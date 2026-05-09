@@ -11,6 +11,7 @@ This matrix links repository validation artifacts to external scientific basis w
 | Fourier pseudo-spectral method | `src/navier_stokes_research/solver/spectral.py` and generated `resolved_config.json` | Canonical references for Fourier pseudo-spectral incompressible flow methods (Canuto et al., Peyret). | confirmed | 2D incompressible periodic domain implementation. | Extrapolating to non-periodic domains or 3D claims. |
 | 2/3 de-aliasing rule | `src/navier_stokes_research/solver/numerics.py` (`dealias_mask`) and solver RHS usage | Orszag (1971) de-aliasing references for pseudo-spectral nonlinear term handling. | confirmed | Numerical anti-aliasing control for this discretization; not a physical-model claim. | Claiming de-aliasing alone guarantees global correctness. |
 | Verification & validation methodology | Validation JSON separation (`runtime_execution`, `scientific_acceptance`, warnings) across harnesses | ASME V&V 20-2009 framework intent (verification/validation separation and credibility discipline). | partial | Adapted engineering workflow, not formal compliance certification. | Stating full compliance with standards without formal audit. |
+| External scientific validation protocol (2D) | `docs/external_scientific_validation_protocol_2d.md` | Conservative protocolization of external references for 2D periodic scope with explicit exclusions. | partial | Documentation-level control; does not by itself constitute direct external numerical comparison. | Interpreting protocol existence as completed external validation. |
 
 ## Explicit gap tracking
 
@@ -22,4 +23,5 @@ This matrix links repository validation artifacts to external scientific basis w
 
 - `passed_roundoff_floor` must be interpreted as controlled numerical agreement at machine precision, not as a general convergence proof.
 - Spectral diagnostics must remain diagnostic-only unless converted to documented, literature-backed acceptance criteria.
+- Spectral diagnostics and physical decay trends are diagnostic evidence and cannot be promoted to formal proof by documentation alone.
 - Any claim beyond 2D incompressible periodic scope is out of scope and must be rejected.
