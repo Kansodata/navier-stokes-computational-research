@@ -15,6 +15,7 @@ This pipeline does not modify the solver. It defines the review process used to 
 The current validation agents are:
 
 - `kansodata-reproducibility-and-ci-auditor`
+- `kansodata-python-documentation-auditor`
 - `kansodata-numerical-methods-auditor`
 - `kansodata-physical-validator`
 - `kansodata-advocatus-diaboli`
@@ -26,6 +27,12 @@ The current validation agents are:
 Evaluates reproducibility and CI-alignment evidence: executable commands, deterministic seeds/configuration, artifact-path consistency, fail-closed status checks, and output traceability.
 
 It does not replace numerical-method review, physical validation, adversarial claim review, documentation-scientific writing, or final merge-gate coordination by primus inter pares.
+
+### `kansodata-python-documentation-auditor`
+
+Audits technical documentation quality in Python files using read-first mode (analyze first, propose second, edit only under explicit bounded scope).
+
+It focuses on docstrings, file/module responsibilities, contracts, fail-closed behavior, and scientific interpretation boundaries without altering numerical logic or validation outcomes.
 
 ### `kansodata-numerical-methods-auditor`
 
