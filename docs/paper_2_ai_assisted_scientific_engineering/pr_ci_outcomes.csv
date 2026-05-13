@@ -1,4 +1,14 @@
 pr_number,head_sha,merge_commit_sha,workflow_name,workflow_status,workflow_conclusion,run_number,run_id,workflow_id,evidence_notes
+31,785b76aa483a601b7aa8acf354f82a44b5318199,b204393fd41f63270716343e6d73839bf77d1bd4,CI,completed,success,1,25399847979,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; automated validation workflow introduced
+32,4b76ba8ccfc3af8cdd0200baa976552fdfb97567,unknown,CI,completed,success,3,25402070468,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; chief scientific reviewer agent documentation
+33,20a5c6299a1f647f14b5a4b0f61dceb2b75b414a,unknown,CI,completed,success,5,25403372552,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; fail-closed validation status checker
+34,499a32c0716ca7229cdcc457d89d3b59b70ff138,unknown,CI,completed,success,7,25408362741,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; multi-resolution energy enstrophy validation
+35,2c2b9b398b728536d83841aefe0117cd8bbab999,unknown,CI,completed,success,9,25409308164,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; validation JSON schema standardization
+36,46f31051352c8ca17615c100a67db240ef6e56b2,unknown,CI,completed,success,11,25409830002,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; consolidated scientific validation report
+37,09d3fac62d6194225317ad66b0fee5d6da4f3682,unknown,CI,completed,success,13,25411521403,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; reproducible validation figures; same head SHA also returned run 15
+38,09d3fac62d6194225317ad66b0fee5d6da4f3682,unknown,CI,completed,success,15,25411533745,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; duplicate/superseded-looking figures PR sharing head SHA with PR 37
+39,a5a718c19ce8664cfe74a617c2b47f716fe9dc70,unknown,CI,completed,success,17,25412180991,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; CI artifact ordering fix
+40,6dade414c6e070a67b08ce2eb58ce9cc80df6673,unknown,CI,completed,success,19,25412336973,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; controlled 2D forcing V&V design
 65,3a3d0d00d87c20808b6f7dc076b2f91c113658af,dcd470a0beb667147a4832600fa007929ef0f291,CI,completed,success,74,25778491657,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; docs-only metrics PR
 66,24d0b8a1ddfa6d86cf80c2400448f50d7284f6f6,24c7060f57aaaf97600db187ee8f1ac6d66e4161,CI,completed,success,76,25778694134,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata dataset PR
 67,f29e28314154dc163c8b8aba4551bbe53282e5b5,fa115f945ed0d593e3d286f781f30dbb8d7b3a1c,CI,completed,success,78,25805115507,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata metrics PR
