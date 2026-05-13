@@ -9,6 +9,16 @@ pr_number,head_sha,merge_commit_sha,workflow_name,workflow_status,workflow_concl
 38,09d3fac62d6194225317ad66b0fee5d6da4f3682,unknown,CI,completed,success,15,25411533745,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; duplicate/superseded-looking figures PR sharing head SHA with PR 37
 39,a5a718c19ce8664cfe74a617c2b47f716fe9dc70,unknown,CI,completed,success,17,25412180991,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; CI artifact ordering fix
 40,6dade414c6e070a67b08ce2eb58ce9cc80df6673,unknown,CI,completed,success,19,25412336973,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; controlled 2D forcing V&V design
+41,6e9a8e003a5bcaf41ce40fa3525bccf26813f106,unknown,CI,completed,success,21,25412562166,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; disabled forcing defaults
+42,3802150a4e2e9d9adfa1a4ef041e366906c1769a,unknown,CI,completed,success,23,25412643012,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; opt-in Ekman drag duplicate/superseded-looking PR
+43,e34eeae7e2b13d03de37fb827481fc828a23875e,unknown,CI,completed,success,25,25412664702,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; opt-in Ekman drag term
+44,812fa1898977dd412ac63dfbdfb6dd0d54e6eae1,unknown,CI,completed,success,27,25412803556,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; deterministic narrow-band Fourier forcing
+45,1c83e2ecb87b4948c919643b37a80d9e4aa8a417,unknown,CI,completed,failure,29,25412902212,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; OU forcing gate failed CI and was followed by PR 46 success
+46,39506e315a2abfec481ce5fed10669e51ec09495,unknown,CI,completed,success,31,25412940587,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; OU narrow-band Fourier forcing succeeded after prior failed gate PR
+47,9a5d6e3269d5d78925b0fd10319b88111f3f7763,unknown,CI,completed,success,33,25413614313,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; forced turbulence validation harness
+48,a8f927a9302ab92e565ec04b5489559e0abf58bd,unknown,CI,completed,success,35,25414375119,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; forced turbulence resolution sensitivity study
+49,479fd71aa23a71ee77d2e086421b4d45446c9cae,unknown,CI,completed,success,37,25414726669,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; GPLv3 license switch duplicate/superseded-looking PR
+50,e95c392306f495852de89faf5cb392fd30ba87c0,unknown,CI,completed,success,39,25414745329,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; GPLv3 license switch
 65,3a3d0d00d87c20808b6f7dc076b2f91c113658af,dcd470a0beb667147a4832600fa007929ef0f291,CI,completed,success,74,25778491657,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; docs-only metrics PR
 66,24d0b8a1ddfa6d86cf80c2400448f50d7284f6f6,24c7060f57aaaf97600db187ee8f1ac6d66e4161,CI,completed,success,76,25778694134,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata dataset PR
 67,f29e28314154dc163c8b8aba4551bbe53282e5b5,fa115f945ed0d593e3d286f781f30dbb8d7b3a1c,CI,completed,success,78,25805115507,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata metrics PR
