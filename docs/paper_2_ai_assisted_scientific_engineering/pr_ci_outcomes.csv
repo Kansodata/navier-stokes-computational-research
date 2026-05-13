@@ -19,6 +19,21 @@ pr_number,head_sha,merge_commit_sha,workflow_name,workflow_status,workflow_concl
 48,a8f927a9302ab92e565ec04b5489559e0abf58bd,unknown,CI,completed,success,35,25414375119,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; forced turbulence resolution sensitivity study
 49,479fd71aa23a71ee77d2e086421b4d45446c9cae,unknown,CI,completed,success,37,25414726669,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; GPLv3 license switch duplicate/superseded-looking PR
 50,e95c392306f495852de89faf5cb392fd30ba87c0,unknown,CI,completed,success,39,25414745329,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; GPLv3 license switch
+51,0e7257fdb7e3ec2222f5d04187e1a6c16796eb18,unknown,CI,completed,success,41,25415705196,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; ORCID citation authors duplicate/superseded-looking PR
+52,157ef36ea0ad0283cc31cd56f5029e4feaebdd0b,unknown,CI,completed,success,43,25415746339,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; ORCID author and citation metadata
+53,4ff5657f03e0932e71b6042791f9c6166c9b26c8,unknown,CI,completed,success,45,25415918434,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; FFTW spectral solver 512
+54,8c1e7b4fa144ab47d393d704c438c413a28edcd2,unknown,CI,completed,success,47,25416371880,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; HPC FFTW vs baseline benchmark
+55,fcec6b5e5ac2ba8ef5ac239109f0d8c6bf823d21,unknown,CI,completed,success,49,25438242481,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; reproducibility and CI auditor agent
+56,afc2d34e61dbdc46c80fb773c22fb0a6904410df,unknown,CI,completed,failure,51,25443340097,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; scientific report PDF PR failed CI and was followed by later successful PRs
+57,acfce31cb976209362dc6e88239bd6d19af3998e,unknown,CI,completed,success,57,25450122148,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; missing MMS validation module import fix
+58,da5031c50b252668ba1d7fc5e279c8501e897003,unknown,CI,completed,success,59,25458032484,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; healthy checkpoint post PDF and CI
+59,803d8a0b336c9bc6445e3836474195afbe60be0d,unknown,CI,completed,success,61,25602989154,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; Python documentation auditor agent
+60,0efe42a045893ec991021698557671ce42a68700,unknown,CI,completed,success,63,25603195633,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; solver Python modules documentation
+61,f61ce852015387a0210fd04274a5100defc82552,unknown,CI,completed,success,66,25604418455,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; MMS validation artifact status enforcement
+62,b5e3c9ee2ffa578568f6b2fa84b9a6902b1eaa86,1d328e8381437a4d46402f918d4d1ffb40074e1a,CI,completed,success,68,25613173998,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; external scientific validation protocol for 2D scope
+63,ababe6d25c415a844fb2116cfb5179b8bdd24849,58edd52a5518bde2367410f09f58cc8d026be23f,CI,completed,success,70,25778166794,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; Paper 2 evidence protocol
+64,c7754f2dfaf2dd7563c8d704c107d787bf9cd0bb,46bc5495f2b794827b7545c22b42f1456af247e0,CI,completed,success,72,25778342265,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; Paper 2 complete PR evidence dataset
 65,3a3d0d00d87c20808b6f7dc076b2f91c113658af,dcd470a0beb667147a4832600fa007929ef0f291,CI,completed,success,74,25778491657,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; docs-only metrics PR
 66,24d0b8a1ddfa6d86cf80c2400448f50d7284f6f6,24c7060f57aaaf97600db187ee8f1ac6d66e4161,CI,completed,success,76,25778694134,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata dataset PR
 67,f29e28314154dc163c8b8aba4551bbe53282e5b5,fa115f945ed0d593e3d286f781f30dbb8d7b3a1c,CI,completed,success,78,25805115507,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; metadata metrics PR
+68,ba35af5071c443caced54d79bbd87eda93f09a2d,48629fedb759373584da81b3ab6a7dcb53334c34,CI,completed,success,80,25806497017,271607213,Confirmed via fetch_commit_workflow_runs on PR head SHA; CI outcomes seed dataset
