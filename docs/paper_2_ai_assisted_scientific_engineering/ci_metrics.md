@@ -1,52 +1,56 @@
 # CI Metrics for Paper 2
 
 ## Purpose
-This document provides a conservative CI evidence snapshot for Paper 2 (AI-assisted scientific engineering study) based only on files currently present in this repository.
+Provide a conservative, repository-grounded summary of CI outcomes for Paper 2 as operational evidence of workflow execution.
 
 ## Source files
-Expected CI source files and current status:
+The following files are present in the current repository snapshot and were used for this summary:
 
-- `docs/paper_2_ai_assisted_scientific_engineering/pr_ci_outcomes.csv`: not available in current repository snapshot.
-- `docs/paper_2_ai_assisted_scientific_engineering/ci_outcomes_notes.md`: not available in current repository snapshot.
-- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_31_40.md`: not available in current repository snapshot.
-- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_41_50.md`: not available in current repository snapshot.
-- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_51_68.md`: not available in current repository snapshot.
+- `docs/paper_2_ai_assisted_scientific_engineering/pr_ci_outcomes.csv`
+- `docs/paper_2_ai_assisted_scientific_engineering/ci_outcomes_notes.md`
+- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_31_40.md`
+- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_41_50.md`
+- `docs/paper_2_ai_assisted_scientific_engineering/ci_backfill_51_68.md`
 
 ## Dataset snapshot
 - Snapshot date: 2026-05-14.
-- CI dataset status: not available in current repository snapshot.
-- Final CI outcome counts require `pr_ci_outcomes.csv` backfill or verification.
+- Primary CI dataset: `pr_ci_outcomes.csv`.
+- Covered PR interval in dataset: PR #31 to PR #68.
 
 ## CI outcome counts
-Because `pr_ci_outcomes.csv` is not available in current repository snapshot, the following metrics are pending verification:
+Computed directly from `pr_ci_outcomes.csv`:
 
-- Total rows: not available in current repository snapshot.
-- Covered PR range: not available in current repository snapshot.
-- Success count: not available in current repository snapshot.
-- Failure count: not available in current repository snapshot.
-- Unavailable/unknown count: not available in current repository snapshot.
-- Failure PR list (including PR #45 and PR #56 presence check): not available in current repository snapshot.
-
-Final CI outcome counts require `pr_ci_outcomes.csv` backfill or verification.
+- Total rows: 38.
+- Covered PR range: 31-68.
+- Success count: 36.
+- Failure count: 2.
+- Unavailable/unknown count: 0 (no row with conclusion outside `success` or `failure`).
+- Failure PR list: PR #45, PR #56.
+- Specific checks:
+  - PR #45 is present with `workflow_status=completed` and `workflow_conclusion=failure`.
+  - PR #56 is present with `workflow_status=completed` and `workflow_conclusion=failure`.
 
 ## Known failure evidence
-No CI failure evidence file was found under the expected Paper 2 path in the current repository snapshot. Therefore, specific failure attribution is pending source-file availability.
+Based on dataset rows in `pr_ci_outcomes.csv`:
+
+- PR #45 is recorded as `completed/failure`.
+- PR #56 is recorded as `completed/failure`.
+
+No additional root-cause claim is made here beyond recorded CI outcome labels in the dataset.
 
 ## Interpretation boundaries
-CI outcome evidence is interpreted strictly as operational workflow evidence (for example, pass/fail outcomes and automation behavior in repository processes). It is not interpreted as direct evidence of scientific truth.
+CI success is operational evidence of workflow execution, not proof of numerical correctness, physical validity, mathematical proof, or autonomous AI scientific validation.
 
 ## Limitations
-- Required Paper 2 CI source files are not present in the current repository snapshot.
-- Quantitative CI counts cannot be computed without `pr_ci_outcomes.csv`.
-- PR-level failure backfill cannot be independently confirmed without the listed notes/backfill files.
-- This snapshot cannot resolve missing historical CI context.
+- This summary depends on the current `pr_ci_outcomes.csv` snapshot and inherits any omissions or labeling errors in that file.
+- CI outcomes are repository-process signals, not direct scientific validation results.
+- Duplicate or superseded PR histories may affect historical interpretation and should be resolved in dedicated provenance analysis.
 
 ## Conservative paper-ready statement
 The CI outcome dataset supports operational evidence about automated workflow behavior. It does not establish numerical correctness, physical validity, mathematical proof, productivity improvement, or autonomous AI scientific validation.
 
 ## Recommended next step
-Add or restore the expected Paper 2 CI files (especially `pr_ci_outcomes.csv` and backfill notes), then recompute counts and regenerate this document with verifiable PR-level evidence.
+Cross-link this CI summary with the broader Paper 2 evidence tables so CI workflow evidence remains explicitly separated from scientific validity claims.
 
----
-
-Rollback plan for this atomic documentation change: remove `docs/paper_2_ai_assisted_scientific_engineering/ci_metrics.md` (and the new directory only if it remains empty) to return to the previous repository state.
+## Rollback plan
+If this update must be reverted, restore the prior state by reverting only `docs/paper_2_ai_assisted_scientific_engineering/ci_metrics.md` in a dedicated follow-up commit.
