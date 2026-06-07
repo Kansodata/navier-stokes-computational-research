@@ -212,6 +212,10 @@ The CI outcome dataset contains 38 rows covering PR #31 through PR #68.
 
 The two recorded CI failures are PR #45 and PR #56. The dataset records them as completed failures. No additional root-cause claim is made in this draft unless supported by a separate evidence artifact.
 
+![CI outcomes summary for Paper 2](../../figures/paper_2/ci_outcomes_summary.png)
+
+Figure: CI outcomes summary for PR #31-#68. The figure summarizes 38 recorded CI outcomes: 36 successes, 2 failures, and 0 unknown outcomes. The failures correspond to PR #45 and PR #56. This is operational workflow evidence only; it does not establish numerical correctness, physical validity, mathematical proof, productivity improvement, or autonomous AI scientific validation.
+
 ### 6.4 Evidence datasets
 
 | Dataset | File | Scope | Interpretation |
