@@ -285,27 +285,45 @@ AI tooling, repository governance, and CI behavior can change rapidly. The obser
 
 ## 9. Related Work
 
-This section requires verified external citations before submission. No external references are introduced in this internal draft.
+This related work is scoped to verified seed references already mapped for this manuscript. The cited literature provides framing for the paper's workflow and evidence boundaries; it does not establish scientific validity for the repository, prove mathematical claims, or imply productivity gains.
 
 ### 9.1 AI-assisted software engineering
 
-Pending verified citations. This subsection should position the paper relative to AI-assisted coding, code generation, and agentic development workflows.
+Recent survey work on large language models in software engineering describes a broad and rapidly developing literature around coding, review, maintenance, and other software-engineering tasks, while also identifying methodological gaps and open questions in the evidence base [@waseem2023_llms_se_slr]. Earlier review work on deep learning in software engineering similarly motivates a conservative reading of AI-for-SE results because task coverage and evidence quality are heterogeneous [@humayoun2020_dl_se_slr].
 
-### 9.2 Empirical software engineering
+For this paper, that literature supports positioning rather than validation. The case study is not used to claim autonomous AI competence, causal productivity improvement, or general software-quality gains. Instead, it studies a controlled AI-assisted engineering workflow in which AI outputs remain subject to explicit human review, repository evidence, and fail-closed validation rules.
 
-Pending verified citations. This subsection should position the study as a longitudinal GitHub-based case study and clarify limits of PR-derived evidence.
+### 9.2 Empirical software engineering and repository-based evidence
+
+Repository-based empirical work provides a useful context for GitHub-derived evidence, including the value and limitations of studying development artifacts, pull requests, issues, and project histories. A systematic review of GitHub-based open-source development challenges reports recurring challenge categories and methodological constraints in repository-mining studies [@ayala2020_oss_challenges_github_slr].
+
+This paper is consistent with that framing because it treats GitHub artifacts as workflow evidence rather than direct evidence of scientific correctness. Pull-request metadata, labels, commit history, and documented review outcomes support a descriptive longitudinal case study. They do not, by themselves, establish that the scientific model is valid, that numerical results are correct, or that the workflow generalizes beyond the observed repository.
 
 ### 9.3 Research software engineering and reproducibility
 
-Pending verified citations. This subsection should connect the workflow to research software engineering, reproducibility, validation artifacts, and versioned scientific evidence.
+Research software governance depends on traceable artifacts, reusable metadata, and clear attribution. The software citation principles motivate explicit and standardized metadata for research software so that software contributions can be identified, credited, and traced [@smith2016_software_citation_principles]. The FAIR principles provide a recognized framework for improving the findability, accessibility, interoperability, and reusability of research outputs [@wilkinson2016_fair_principles].
+
+These references support the paper's emphasis on documented artifacts, reproducible workflow records, and versioned evidence. They do not imply that a repository is scientifically valid merely because it is documented, cited, or organized according to reproducibility-oriented principles. In this manuscript, software citation and FAIR-oriented framing are used as governance context, not as substitutes for scientific validation or peer review.
 
 ### 9.4 Scientific software validation and verification
 
-Pending verified citations. This subsection should distinguish operational testing, verification, validation, diagnostic evidence, and mathematical proof.
+The current seed bibliography does not include a dedicated scientific software verification-and-validation reference. For that reason, this subsection remains deliberately bounded. The reproducibility and citation literature motivates traceability and stewardship of research software artifacts [@smith2016_software_citation_principles; @wilkinson2016_fair_principles], but it does not establish solver correctness, numerical convergence, physical validity, or mathematical proof.
 
-### 9.5 Human-in-the-loop AI systems
+Accordingly, this paper separates CI evidence, workflow evidence, repository evidence, and scientific validity. Passing tests or documenting validation artifacts can support operational confidence and auditability within the repository, but it does not imply proof of the Navier-Stokes problem, validation of three-dimensional behavior, or general numerical correctness. Additional venue-specific V&V references may be required before journal submission if the manuscript expands claims about numerical validation.
 
-Pending verified citations. This subsection should frame the agent roles as human-supervised workflow components rather than autonomous authorities.
+### 9.5 Human-in-the-loop AI systems and agentic review roles
+
+The AI-assisted software-engineering literature motivates interest in LLM-supported engineering workflows, but the verified seed references do not establish that AI agents can independently validate scientific claims [@waseem2023_llms_se_slr; @humayoun2020_dl_se_slr]. This limitation is central to the workflow studied here: agentic roles are treated as review aids and structured control points, not autonomous scientific authorities.
+
+The paper's human-in-the-loop framing therefore remains fail-closed. AI-generated recommendations, review comments, or implementation suggestions require human acceptance and repository-grounded validation before they can affect the scientific record. This positioning supports the manuscript's governance contribution without claiming AI autonomy, independent scientific judgment, or causal improvements in research productivity.
+
+### 9.6 Positioning of this paper
+
+This paper is positioned at the intersection of AI-assisted software engineering, empirical repository-based software engineering, and research software reproducibility. Existing AI-for-SE reviews provide context for the breadth and uncertainty of AI-assisted engineering evidence [@waseem2023_llms_se_slr; @humayoun2020_dl_se_slr]. Repository-mining literature supports a cautious interpretation of GitHub-derived case-study evidence [@ayala2020_oss_challenges_github_slr]. Software citation and FAIR-oriented work motivate traceability, stewardship, and artifact governance for research software [@smith2016_software_citation_principles; @wilkinson2016_fair_principles].
+
+The contribution of this paper is therefore not a CFD novelty claim, a mathematical result, or a general claim that AI improves software engineering. It is a conservative, repository-grounded case study of a controlled AI-assisted scientific engineering workflow with explicit evidence boundaries, human review, rollback discipline, and fail-closed validation semantics.
+
+This related-work section is intentionally scoped to verified seed references. Additional venue-specific references may be added before journal submission, but no unsupported claims are introduced here.
 
 ## 10. Conclusion
 
